@@ -1,105 +1,132 @@
-/* Basic styling for the feed */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden; /* Prevents scrolling the body itself */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-#feed-container {
-  height: 100vh;
-  width: 100vw;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory; /* This is the key for the TikTok-like scroll */
-}
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-/* ... existing styles ... */
+    #feed-container {
+      height: 100vh;
+      width: 100vw;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      background: #fafafa;
+    }
 
-.video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end; /*This moves everything to the bottom */
-    padding: 20px;
-    box-sizing: border-box;
-    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 40%);
-    color: white; /* Ensure all text inside is white */
-}
+    .video-post {
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
 
-.video-info {
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-  margin-bottom: 10px;
-}
+    .player-container {
+      width: 390px;
+      height: 640px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
 
-.video-info .author {
-    font-weight: bold;
-}
+    .video-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white;
+      padding: 40px 30px 30px;
+      box-sizing: border-box;
+    }
 
-.video-actions {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+    .video-info .author {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
 
-.action-icon {
-    font-size: 2rem;
-    color: white;
-    cursor: pointer;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    margin-top: 20px;
-}
+    .video-info .title {
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.9;
+    }
 
-.action-icon.liked {
-    color: #ff3b5c; /* A nice red for liked hearts */
-}
+    .video-actions {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-/* Comment Modal Styles */
-.comment-modal .modal-background {
-    background-color: rgba(10, 10, 10, 0.7); /* Darker background */
-}
+    .action-icon {
+      font-size: 28px;
+      color: white;
+      cursor: pointer;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      transition: color 0.2s;
+    }
 
-.comment-modal .modal-content {
-    background-color: #262626;
-    color: white;
-    border-radius: 12px;
-    padding: 20px;
-}
+    .action-icon:hover {
+      color: #fff;
+    }
 
-.comment-modal .comment {
-    margin-bottom: 15px;
-}
+    .action-icon.liked {
+      color: #ed4956;
+    }
 
-.comment-modal .comment-author {
-    font-weight: bold;
-    margin-right: 8px;
-}
+    /* Focus animations */
+    .video-post.item-hide {
+      opacity: 0;
+      transform: scale(0.8);
+    }
 
-.like-button {
-  font-size: 2.5rem;
-  color: white;
-  cursor: pointer;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-}
+    .video-post.item-focus,
+    .video-post.item-next {
+      opacity: 1;
+      transform: scale(1);
+    }
 
-/* Wrapped Page Styles */
-#wrapped-content .box {
-    margin-bottom: 2rem;
-}
+    h1 {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      color: #262626;
+      font-weight: 600;
+      font-size: 24px;
+    }
 
-#top-hashtags .tag {
-    margin-right: 0.5rem;
-}
+    /* Mobile */
+    @media (max-width: 768px) {
+      .player-container {
+        width: 100%;
+        height: 100vh;
+        position: static;
+        transform: none;
+        border-radius: 0;
+      }
+    }
 
-#wrapped-content img {
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+    /* Custom scrollbar */
+    #feed-container::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #feed-container::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }

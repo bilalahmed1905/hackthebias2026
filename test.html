@@ -1,53 +1,405 @@
 <!DOCTYPE html>
-<html>
-  <body>
-    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
-    <div id="player"></div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Shorts Scroll</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    /* Instagram-like styling - clean white/black */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <script>
-      // 2. This code loads the IFrame Player API code asynchronously.
-      var tag = document.createElement('script');
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    #feed-container {
+      height: 100vh;
+      width: 100vw;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      background: #fafafa;
+    }
 
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          height: '390',
-          width: '640',
-          videoId: 'UhVc3B-OQIs',
+    .video-post {
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .player-container {
+      width: 390px;
+      height: 640px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+
+    .video-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white;
+      padding: 40px 30px 30px;
+      box-sizing: border-box;
+    }
+
+    .video-info .author {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .video-info .title {
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0.9;
+    }
+
+    .video-actions {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .action-icon {
+      font-size: 28px;
+      color: white;
+      cursor: pointer;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      transition: color 0.2s;
+    }
+
+    .action-icon:hover {
+      color: #fff;
+    }
+
+    .action-icon.liked {
+      color: #ed4956;
+    }
+
+    /* Focus animations */
+    .video-post.item-hide {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    .video-post.item-focus,
+    .video-post.item-next {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    h1 {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      color: #262626;
+      font-weight: 600;
+      font-size: 24px;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .player-container {
+        width: 100%;
+        height: 100vh;
+        position: static;
+        transform: none;
+        border-radius: 0;
+      }
+    }
+
+    /* Custom scrollbar */
+    #feed-container::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #feed-container::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Instagram DoomScroll Simulator</h1>
+  <div id="feed-container">
+    <!-- Videos dynamically inserted here -->
+  </div>
+  <div id="modal-container"></div>
+
+  <!-- YouTube API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  
+  <script>
+    // Keep your video data structure but start with first 2
+    const videoData = [
+      {
+        id: 1,
+        videoId: 'UhVc3B-OQIs',
+        title: 'Ranking The Best Slow Motion Dogs 🐶',
+        author: 'pettastic-clip',
+        hashtags: ['funny', 'pets', 'dogs']
+      },
+      {
+        id: 2,
+        videoId: '0tng6DqwT3w',
+        title: 'Ranking Dramatic Husky Moments 😂',
+        author: 'accidentalentertianment',
+        hashtags: ['funny', 'pets', 'dogs']
+      }
+      // Add more from your main.js when ready
+    ];
+
+    let simulationState = {
+      feed: [],
+      viewedIds: new Set(),
+      simulationLength: 10,
+      playerObjects: {},
+      observer: null,
+      currentIndex: 0
+    };
+
+    let userProfile = {
+      engagement: {}
+    };
+
+    let ytReady = false;
+
+    // YouTube API ready
+    function onYouTubeIframeAPIReady() {
+      console.log('YouTube API ready');
+      ytReady = true;
+      initializeFeed();
+    }
+
+    function initializeFeed() {
+      const feedContainer = document.getElementById('feed-container');
+      feedContainer.innerHTML = '';
+
+      // Always load first 2 videos
+      videoData.slice(0, 2).forEach(video => {
+        const post = createPlayer(video);
+        simulationState.feed.push(video);
+        simulationState.viewedIds.add(video.id);
+      });
+
+      setupObserver();
+      setupSnapScroll();
+    }
+
+    function createPlayer(video) {
+      const feedContainer = document.getElementById('feed-container');
+      
+      const postElement = document.createElement('div');
+      postElement.className = 'video-post';
+      postElement.id = `post-video-${video.id}`;
+      postElement.dataset.videoId = video.id;
+
+      const playerContainer = document.createElement('div');
+      playerContainer.className = 'player-container';
+      playerContainer.id = `player-video-${video.id}`;
+
+      const overlayElement = document.createElement('div');
+      overlayElement.className = 'video-overlay';
+      overlayElement.innerHTML = `
+        <div class="video-info">
+          <p class="author">${video.author}</p>
+          <p class="title">${video.title}</p>
+        </div>
+        <div class="video-actions">
+          <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
+          <span class="action-icon" data-action="comment" data-video-id="${video.id}">💬</span>
+          <span class="action-icon" data-action="share" data-video-id="${video.id}">📤</span>
+        </div>
+      `;
+
+      postElement.appendChild(playerContainer);
+      postElement.appendChild(overlayElement);
+      feedContainer.appendChild(postElement);
+
+      // Create YouTube player
+      if (ytReady) {
+        const player = new YT.Player(`player-video-${video.id}`, {
+          height: '640',
+          width: '390',
+          videoId: video.videoId,
           playerVars: {
-            'playsinline': 1
+            autoplay: 1,
+            playsinline: 1,
+            controls: 0,
+            mute: 1,
+            rel: 0,
+            modestbranding: 1
           },
           events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
+            onReady: (event) => {
+              event.target.playVideo();
+            }
           }
         });
+
+        simulationState.playerObjects[video.id] = player;
       }
 
-      // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        event.target.playVideo();
-      }
+      // Event listeners for actions
+      overlayElement.querySelectorAll('.action-icon').forEach(icon => {
+        icon.addEventListener('click', handleFeedClick);
+      });
 
-      // 5. The API calls this function when the player's state changes.
-      //    The function indicates that when playing a video (state=1),
-      //    the player should play for six seconds and then stop.
-      var done = false;
-      function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING && !done) {
-          setTimeout(stopVideo, 6000);
-          done = true;
+      // Update focus classes
+      updateFocusClasses();
+
+      return postElement;
+    }
+
+    function setupObserver() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const post = entry.target;
+          const playerId = post.querySelector('.player-container').id;
+          const player = simulationState.playerObjects[post.dataset.videoId];
+
+          if (entry.isIntersecting && player) {
+            player.playVideo();
+          } else if (player) {
+            player.pauseVideo();
+          }
+        });
+      }, { threshold: 0.5 });
+
+      simulationState.observer = observer;
+      document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
+    }
+
+    function setupSnapScroll() {
+      const feedContainer = document.getElementById('feed-container');
+      let scrollTimeout;
+
+      feedContainer.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollTop = feedContainer.scrollTop;
+          const newIndex = Math.round(scrollTop / window.innerHeight);
+          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+          updateFocusClasses();
+        }, 100);
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        const feedContainer = document.getElementById('feed-container');
+        if (e.key === 'ArrowDown' || e.key === ' ') {
+          e.preventDefault();
+          if (simulationState.currentIndex < simulationState.feed.length - 1) {
+            simulationState.currentIndex++;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (simulationState.currentIndex > 0) {
+            simulationState.currentIndex--;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
         }
+      });
+    }
+
+    function updateFocusClasses() {
+      document.querySelectorAll('.video-post').forEach((post, index) => {
+        post.classList.remove('item-focus', 'item-next', 'item-hide');
+        if (index < simulationState.currentIndex) {
+          post.classList.add('item-hide');
+        } else if (index === simulationState.currentIndex) {
+          post.classList.add('item-focus');
+        } else if (index === simulationState.currentIndex + 1) {
+          post.classList.add('item-next');
+        }
+      });
+    }
+
+    function handleFeedClick(event) {
+      const target = event.target;
+      if (!target.classList.contains('action-icon')) return;
+
+      const action = target.dataset.action;
+      const videoId = parseInt(target.dataset.videoId);
+
+      switch (action) {
+        case 'like':
+          target.classList.toggle('liked');
+          trackEngagement(videoData.find(v => v.id === videoId), 'like');
+          break;
+        case 'comment':
+          handleCommentClick(videoId);
+          break;
+        case 'share':
+          handleShareClick(videoId);
+          break;
       }
-      function stopVideo() {
-        player.stopVideo();
-      }
-    </script>
-  </body>
+    }
+
+    function trackEngagement(video, type) {
+      const weights = { like: 2, comment: 3, share: 4 };
+      const weight = weights[type] || 1;
+      
+      video.hashtags.forEach(tag => {
+        userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
+      });
+    }
+
+    function handleCommentClick(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      const modalContainer = document.getElementById('modal-container');
+      modalContainer.innerHTML = `
+        <div class="modal is-active">
+          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+          <div class="modal-content">
+            <div class="box has-background-black has-text-white">
+              <h3 class="title is-4 has-text-white">Comments</h3>
+              <p>No comments yet...</p>
+            </div>
+          </div>
+          <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
+        </div>
+      `;
+      trackEngagement(video, 'comment');
+    }
+
+    function handleShareClick(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      trackEngagement(video, 'share');
+      console.log('Shared:', video.title);
+    }
+  </script>
+</body>
 </html>
+
+
+
