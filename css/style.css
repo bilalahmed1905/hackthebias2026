@@ -28,25 +28,42 @@ html, body {
 .video-post iframe {
   width: 100%;
   height: 100%;
+  pointer-events: none; /* This is crucial to allow clicking on our overlay */
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-sizing: border-box;
+    background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 30%);
 }
 
 /* TODO: Style the UI elements like author, title, and like button */
 .video-info {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
   color: white;
-  z-index: 10;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.video-info .author {
+    font-weight: bold;
+}
+
+.video-actions {
+    align-self: flex-end;
 }
 
 .like-button {
-  position: absolute;
-  bottom: 100px;
-  right: 20px;
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: white;
   cursor: pointer;
-  z-index: 10;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
 }
 
 /* Wrapped Page Styles */
