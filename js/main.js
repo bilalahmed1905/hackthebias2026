@@ -17,6 +17,37 @@
       // Add more from your main.js when ready
     ];
 
+    const commentData = [
+      {
+        topic: 'funny',
+        comments: [
+          'This made my day! 😂',
+          'I can\'t stop laughing! 🤣',
+          'Best video ever! 😆',
+          'hilarious',
+          'this is crazy']
+      },
+      {
+        topic: 'pets',
+        comments: [
+          'So cute! 🥰',
+          'I want',
+          'Adorable!',
+          'Love this!',
+          'precious']
+      },
+      {
+        topic: 'news',
+        comments: [
+          'Very informative.',
+          'Thanks for sharing this.',
+          'Eye-opening content.',
+          'important info',
+          'must watch']
+      }
+
+    ];
+
     let simulationState = {
       feed: [],
       viewedIds: new Set(),
@@ -74,11 +105,21 @@
           <h2 class="title">${video.title}</h2>
         </div>
         <div class="video-actions">
-          <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
-          <span class="action-icon" data-action="comment" data-video-id="${video.id}">💬</span>
-          <span class="action-icon" data-action="share" data-video-id="${video.id}">📤</span>
+           <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">
+           <i class="far fa-heart"></i>
+           </span>
+           <span class="action-icon" data-video-id="${video.id}">
+            <i class="far fa-comment" onClick="handleCommentClick(${video.id})"></i>
+           </span>
+           <span class="action-icon" data-action="share" data-video-id="${video.id}">
+           <i class="far fa-paper-plane"></i>
+           </span>
+
+          
+
         </div>
       `;
+
 
       postElement.appendChild(playerContainer);
       postElement.appendChild(overlayElement);
@@ -199,9 +240,15 @@
 
       switch (action) {
         case 'like':
-          target.classList.toggle('liked');
-          trackEngagement(videoData.find(v => v.id === videoId), 'like');
-          break;
+          const heartIcon = target;
+          heartIcon.classList.toggle('liked');
+          heartIcon.classList.toggle('fas');     // filled heart
+          heartIcon.classList.toggle('far');     // outline heart
+          trackEngagement(videoData.find(v => v.id === videoId), 'like');
+          break;
+          // target.classList.toggle('liked');
+          // trackEngagement(videoData.find(v => v.id === videoId), 'like');
+          // break;
         case 'comment':
           handleCommentClick(videoId);
           break;
@@ -220,7 +267,37 @@
       });
     }
 
+    
     function handleCommentClick(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      const modalContainer = document.getElementById('modal-container');
+      
+      modalContainer.innerHTML = `
+        <div class="modal is-active comment-modal">
+          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+          <div class="modal-content" style="max-width: 400px;">
+            <div class="box has-background-black-bis has-text-white-bis" style="border-radius: 12px;">
+              <div class="modal-card-head has-background-black-bis pb-4">
+                <p class="modal-card-title has-text-white-bis mb-0">Comments</p>
+                <button class="delete" style="position: absolute; right: 10px; top: 10px;" onclick="document.getElementById('modal-container').innerHTML=''"></button>
+              </div>
+              <div class="modal-card-body p-4">
+                <p class="has-text-grey-light mb-4">No comments yet... 💬</p>
+                <div class="field">
+                  <div class="control">
+                    <input class="input has-background-grey-darker has-text-white" type="text" placeholder="Add a comment...">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      trackEngagement(video, 'comment');
+    }
+    
+    function handleCommentClick1(videoId) {
       const video = videoData.find(v => v.id === videoId);
       const modalContainer = document.getElementById('modal-container');
       modalContainer.innerHTML = `
@@ -230,6 +307,8 @@
             <div class="box has-background-black has-text-white">
               <h3 class="title is-4 has-text-white">Comments</h3>
               <p>No comments yet...</p>
+              
+         
             </div>
           </div>
           <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
