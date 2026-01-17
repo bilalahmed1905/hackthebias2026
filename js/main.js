@@ -1,148 +1,245 @@
-/* 
-  main.js - Core logic for the scrolling simulation
-*/
+// Keep your video data structure but start with first 2
+    const videoData = [
+      {
+        id: 1,
+        videoId: 'kjYaXuf8OUE',
+        title: 'Ranking The Best Slow Motion Dogs 🐶',
+        author: 'pettastic-clip',
+        hashtags: ['funny', 'pets', 'dogs']
+      },
+      {
+        id: 2,
+        videoId: '0tng6DqwT3w',
+        title: 'Ranking Dramatic Husky Moments 😂',
+        author: 'accidentalentertianment',
+        hashtags: ['funny', 'pets', 'dogs']
+      }
+      // Add more from your main.js when ready
+    ];
 
-// -----------------------------------------------------------------------------
-// STEP 1: DEFINE THE "UNIVERSE" OF VIDEOS
-// -----------------------------------------------------------------------------
-// - Find 20-30 YouTube Shorts.
-// - For each video, get the Video ID from the URL.
-//   (e.g., for https://www.youtube.com/shorts/ABCDEFG, the ID is "ABCDEFG")
-// - Categorize them with hashtags. Create a mix of broad and niche/extreme tags.
-//   This is the most important step for creating the "rabbit hole" effect.
-// -----------------------------------------------------------------------------
+    let simulationState = {
+      feed: [],
+      viewedIds: new Set(),
+      simulationLength: 10,
+      playerObjects: {},
+      observer: null,
+      currentIndex: 0
+    };
 
-const videoData = [
-  // --- Start with some neutral, popular content ---
-  { id: 1, videoId: '8_4-Qa2a_Cg', title: 'Cute Cat Video', author: '@catlover', hashtags: ['#animals', '#funny', '#cute'] },
-  { id: 2, videoId: 'v4pi1LxuDHc', title: 'Amazing Travel Destination', author: '@wanderlust', hashtags: ['#travel', '#nature', '#adventure'] },
-  { id: 3, videoId: '3G1PFLuTrgM', title: 'Simple Cooking Recipe', author: '@cheflife', hashtags: ['#food', '#cooking', '#recipe'] },
+    let userProfile = {
+      engagement: {}
+    };
 
-  // --- Introduce some more specific/niche topics ---
-  { id: 4, videoId: '6_pru8U2RmM', title: 'New Tech Gadgets', author: '@techie', hashtags: ['#tech', '#gadgets', '#future'] },
-  { id: 5, videoId: '5qap5aO4i9A', title: 'Stock Market Tips', author: '@investpro', hashtags: ['#finance', '#stocks', '#investing'] },
-  
-  // --- Add content that can lead down a "rabbit hole" ---
-  { id: 6, videoId: 'a_jt1h_d4yM', title: 'Is AI Taking Over?', author: '@futurescope', hashtags: ['#tech', '#ai', '#danger'] },
-  { id: 7, videoId: 'Y_plhkz34II', title: 'The Truth About Area 51', author: '@conspiracyfiles', hashtags: ['#conspiracy', '#aliens', '#secret'] },
-  { id: 8, videoId: 'OPEE7s0-u8s', title: 'Simulation Theory Explained', author: '@deepthinker', hashtags: ['#conspiracy', '#philosophy', '#reality'] },
-  { id: 9, videoId: 'l_a_qR4Xq_I', title: 'Financial System is a Scam?', author: '@truthseeker', hashtags: ['#finance', '#conspiracy', '#money'] },
+    let ytReady = false;
 
-  // TODO: Add 10-20 more videos to make the pool larger and more diverse.
-  // The more videos, the more effective the simulation will be.
-];
+    // YouTube API ready
+    function onYouTubeIframeAPIReady() {
+      console.log('YouTube API ready');
+      ytReady = true;
+      initializeFeed();
+    }
 
+    function initializeFeed() {
+      const feedContainer = document.getElementById('feed-container');
+      feedContainer.innerHTML = '';
 
-// -----------------------------------------------------------------------------
-// STEP 2: SET UP THE SIMULATION STATE
-// -----------------------------------------------------------------------------
-const userProfile = {
-  engagement: {}, // e.g., { '#tech': 2, '#conspiracy': 5 }
-};
+      // Always load first 2 videos
+      videoData.slice(0, 2).forEach(video => {
+        const post = createPlayer(video);
+        simulationState.feed.push(video);
+        simulationState.viewedIds.add(video.id);
+      });
 
-const simulationState = {
-  feed: [], // Array of video objects shown to the user
-  viewedIds: new Set(), // To avoid showing the same video twice
-  simulationLength: 10, // End simulation after 10 videos
-};
+      setupObserver();
+      setupSnapScroll();
+    }
 
+    function createPlayer(video) {
+      const feedContainer = document.getElementById('feed-container');
+      
+      const postElement = document.createElement('div');
+      postElement.className = 'video-post';
+      postElement.id = `post-video-${video.id}`;
+      postElement.dataset.videoId = video.id;
 
-// -----------------------------------------------------------------------------
-// STEP 3: IMPLEMENT THE YOUTUBE PLAYER AND FEED LOGIC
-// -----------------------------------------------------------------------------
+      const playerContainer = document.createElement('div');
+      playerContainer.className = 'player-container';
+      playerContainer.id = `player-video-${video.id}`;
 
-// This function will be called by the YouTube IFrame API when it's ready.
-function onYouTubeIframeAPIReady() {
-  // TODO:
-  // 1. Load the initial set of videos into the feed.
-  //    - Pick 3-4 random videos from `videoData` to start.
-  //    - For each video, call a function like `createPlayer(videoObject)`.
-  // 2. Set up the Intersection Observer to detect which video is in view.
-  console.log("YouTube API is ready.");
-  initializeFeed();
-}
+      const overlayElement = document.createElement('div');
+      overlayElement.className = 'video-overlay';
+      overlayElement.innerHTML = `
+        <div class="video-info">
+          <h1 class="author">${video.author}</h1>
+          <h2 class="title">${video.title}</h2>
+        </div>
+        <div class="video-actions">
+          <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
+          <span class="action-icon" data-action="comment" data-video-id="${video.id}">💬</span>
+          <span class="action-icon" data-action="share" data-video-id="${video.id}">📤</span>
+        </div>
+      `;
 
-function initializeFeed() {
-  // TODO:
-  // - Clear the feed container.
-  // - Get the first few videos to display.
-  // - Create player for each initial video.
-  // - Add them to the DOM.
-}
+      postElement.appendChild(playerContainer);
+      postElement.appendChild(overlayElement);
+      feedContainer.appendChild(postElement);
 
-function createPlayer(video) {
-  // TODO:
-  // - Create a div element for the video post.
-  // - Inside it, create another div that the YouTube player will attach to.
-  // - Use `new YT.Player()` to create the player.
-  //   - Set the `videoId` from the video object.
-  // - Set playerVars like `autoplay: 1`, `controls: 0`, `loop: 1`.
-  //   - Add event listeners (`onStateChange`) to detect when the video plays or ends.
-  // - Append the post to the #feed-container.
-  // - Add the video to `simulationState.feed` and its ID to `simulationState.viewedIds`.
-}
+      // Create YouTube player
+      if (ytReady) {
+        const player = new YT.Player(`player-video-${video.id}`, {
+          height: '640',
+          width: '390',
+          videoId: video.videoId,
+          playerVars: {
+            autoplay: 1,
+            // playsinline: 1,
+            controls: 0,
+            mute: 1,
+            rel: 0,
+            modestbranding: 1
+          },
+          events: {
+            onReady: (event) => {
+              event.target.playVideo();
+            }
+          }
+        });
 
+        simulationState.playerObjects[video.id] = player;
+      }
 
-// -----------------------------------------------------------------------------
-// STEP 4: IMPLEMENT THE "ALGORITHM"
-// -----------------------------------------------------------------------------
+      // Event listeners for actions
+      overlayElement.querySelectorAll('.action-icon').forEach(icon => {
+        icon.addEventListener('click', handleFeedClick);
+      });
 
-function getNextVideo() {
-  // TODO:
-  // 1. Analyze `userProfile.engagement` to find the most engaged-with hashtags.
-  // 2. Decide whether to show a "recommended" video or a "random" one (e.g., 70/30 split).
-  // 3. **If recommended:**
-  //    - Filter `videoData` to find videos that have the top hashtags AND have not been viewed yet.
-  //    - If matches are found, pick one.
-  // 4. **If random (or no recommendation found):**
-  //    - Pick a random video from `videoData` that has not been viewed.
-  // 5. Return the chosen video object.
-}
+      // Update focus classes
+      updateFocusClasses();
 
+      return postElement;
+    }
 
-// -----------------------------------------------------------------------------
-// STEP 5: TRACK ENGAGEMENT
-// -----------------------------------------------------------------------------
+    function setupObserver() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const post = entry.target;
+          const playerId = post.querySelector('.player-container').id;
+          const player = simulationState.playerObjects[post.dataset.videoId];
 
-function trackEngagement(video, engagementType) {
-  // engagementType can be 'like', 'long_watch', etc.
-  
-  // TODO:
-  // - For each hashtag in `video.hashtags`:
-  //   - If the hashtag is already in `userProfile.engagement`, increment its score.
-  //   - Otherwise, add it with a score of 1.
-  console.log(`Engagement with: ${video.title}, type: ${engagementType}`);
-}
+          if (entry.isIntersecting && player) {
+            player.playVideo();
+          } else if (player) {
+            player.pauseVideo();
+          }
+        });
+      }, { threshold: 0.5 });
 
-// The Intersection Observer callback
-function handleIntersection(entries) {
-  // TODO:
-  // - Loop through entries.
-  // - If an entry is intersecting (visible on screen):
-  //   - Play the video using the Player API (`player.playVideo()`).
-  //   - Start a timer. If the video is visible for > 3 seconds, call `trackEngagement(video, 'long_watch')`.
-  // - If an entry is not intersecting:
-  //   - Pause the video (`player.pauseVideo()`).
-}
+      simulationState.observer = observer;
+      document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
+    }
 
+    function setupSnapScroll() {
+      const feedContainer = document.getElementById('feed-container');
+      let scrollTimeout;
 
-// -----------------------------------------------------------------------------
-// STEP 6: END THE SIMULATION
-// -----------------------------------------------------------------------------
+      feedContainer.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollTop = feedContainer.scrollTop;
+          const newIndex = Math.round(scrollTop / window.innerHeight);
+          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+          updateFocusClasses();
+        }, 100);
+      });
 
-function endSimulation() {
-  // TODO:
-  // 1. Save the necessary data to localStorage.
-  //    - `simulationState.feed` (to get the snapshots)
-  //    - `userProfile.engagement` (to calculate top hashtags and bias)
-  // 2. Redirect the user to the wrapped page.
-  //    - `window.location.href = 'wrapped.html';`
-  console.log("Simulation ended. Redirecting to wrapped page.");
-}
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        const feedContainer = document.getElementById('feed-container');
+        if (e.key === 'ArrowDown' || e.key === ' ') {
+          e.preventDefault();
+          if (simulationState.currentIndex < simulationState.feed.length - 1) {
+            simulationState.currentIndex++;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (simulationState.currentIndex > 0) {
+            simulationState.currentIndex--;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
+        }
+      });
+    }
 
-// Example of how you might check to end the simulation
-function checkEndOfSimulation() {
-  if (simulationState.feed.length >= simulationState.simulationLength) {
-    endSimulation();
-  }
-}
+    function updateFocusClasses() {
+      document.querySelectorAll('.video-post').forEach((post, index) => {
+        post.classList.remove('item-focus', 'item-next', 'item-hide');
+        if (index < simulationState.currentIndex) {
+          post.classList.add('item-hide');
+        } else if (index === simulationState.currentIndex) {
+          post.classList.add('item-focus');
+        } else if (index === simulationState.currentIndex + 1) {
+          post.classList.add('item-next');
+        }
+      });
+    }
+
+    function handleFeedClick(event) {
+      const target = event.target;
+      if (!target.classList.contains('action-icon')) return;
+
+      const action = target.dataset.action;
+      const videoId = parseInt(target.dataset.videoId);
+
+      switch (action) {
+        case 'like':
+          target.classList.toggle('liked');
+          trackEngagement(videoData.find(v => v.id === videoId), 'like');
+          break;
+        case 'comment':
+          handleCommentClick(videoId);
+          break;
+        case 'share':
+          handleShareClick(videoId);
+          break;
+      }
+    }
+
+    function trackEngagement(video, type) {
+      const weights = { like: 2, comment: 3, share: 4 };
+      const weight = weights[type] || 1;
+      
+      video.hashtags.forEach(tag => {
+        userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
+      });
+    }
+
+    function handleCommentClick(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      const modalContainer = document.getElementById('modal-container');
+      modalContainer.innerHTML = `
+        <div class="modal is-active">
+          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+          <div class="modal-content">
+            <div class="box has-background-black has-text-white">
+              <h3 class="title is-4 has-text-white">Comments</h3>
+              <p>No comments yet...</p>
+            </div>
+          </div>
+          <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
+        </div>
+      `;
+      trackEngagement(video, 'comment');
+    }
+
+    function handleShareClick(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      trackEngagement(video, 'share');
+      console.log('Shared:', video.title);
+    }
