@@ -45,6 +45,7 @@ const simulationState = {
   feed: [], // Array of video objects shown to the user
   viewedIds: new Set(), // To avoid showing the same video twice
   simulationLength: 10, // End simulation after 10 videos
+  playerObjects: {}, // To store the YT.Player instances
 };
 
 
@@ -74,31 +75,25 @@ function initializeFeed() {
   } else {
     console.error("videoData is empty. Please add video objects to the array in main.js.");
   }
-
-  // TODO: Later, this function will be expanded to load the first 2-3 videos
-  // to make scrolling smooth from the start.
+  // TODO: Set up IntersectionObserver here
 }
 
 /**
- * Creates a single video post and embeds the YouTube player using the IFrame API.
- * @param {object} video - The video object from our videoData array.
+ * Creates a single video post and embeds the YouTube player.
+ * @param {object} video - The video object from videoData.
  */
 function createPlayer(video) {
   const feedContainer = document.getElementById('feed-container');
 
-  // 1. Create the main container for the entire post.
   const postElement = document.createElement('div');
   postElement.className = 'video-post';
   postElement.id = `post-${video.id}`;
+  postElement.dataset.videoId = video.id; // Store video id for easy access
 
-  // 2. Create the specific, empty div that the YouTube player will replace.
-  //    This element MUST have a unique ID for the API to find and target it.
   const playerElement = document.createElement('div');
   const playerId = `player-${video.id}`;
   playerElement.id = playerId;
   
-  // 3. Create the overlay for our custom UI (title, author, like button).
-  //    This sits on top of the video.
   const overlayElement = document.createElement('div');
   overlayElement.className = 'video-overlay';
   overlayElement.innerHTML = `
@@ -143,11 +138,11 @@ function createPlayer(video) {
     }
   });
 
-  // 7. Update our simulation state to track that this video has been shown.
+  simulationState.playerObjects[video.id] = player;
   simulationState.feed.push(video);
   simulationState.viewedIds.add(video.id);
   
-  console.log(`Successfully created and embedded player for: ${video.title}`);
+  console.log(`Created player for: ${video.title}`);
 }
 
 
@@ -156,30 +151,136 @@ function createPlayer(video) {
 // -----------------------------------------------------------------------------
 
 function getNextVideo() {
-  // TODO:
-  // 1. Analyze `userProfile.engagement` to find the most engaged-with hashtags.
-  // 2. Decide whether to show a "recommended" video or a "random" one (e.g., 70/30 split).
-  // 3. **If recommended:**
-  //    - Filter `videoData` to find videos that have the top hashtags AND have not been viewed yet.
-  //    - If matches are found, pick one.
-  // 4. **If random (or no recommendation found):**
-  //    - Pick a random video from `videoData` that has not been viewed.
-  // 5. Return the chosen video object.
+  // TODO: Implement algorithm logic
+  // For now, just get the next unseen video
+  const nextVideo = videoData.find(v => !simulationState.viewedIds.has(v.id));
+  return nextVideo;
 }
 
 
 // -----------------------------------------------------------------------------
-// STEP 5: TRACK ENGAGEMENT
+// STEP 5: TRACK ENGAGEMENT & HANDLE UI CLICKS
 // -----------------------------------------------------------------------------
 
+/**
+ * Handles all clicks within the feed container.
+ * @param {Event} event The click event.
+ */
+function handleFeedClick(event) {
+    const target = event.target;
+    if (!target.classList.contains('action-icon')) return;
+
+    const action = target.dataset.action;
+    const videoId = parseInt(target.dataset.videoId, 10);
+
+    switch (action) {
+        case 'like':
+            handleLikeClick(videoId, target);
+            break;
+        case 'comment':
+            handleCommentClick(videoId);
+            break;
+        case 'share':
+            handleShareClick(videoId);
+            break;
+    }
+}
+
+/**
+ * Handles the logic when a like button is clicked.
+ * @param {number} videoId The ID of the video.
+ * @param {HTMLElement} iconElement The icon element that was clicked.
+ */
+function handleLikeClick(videoId, iconElement) {
+    iconElement.classList.toggle('liked');
+    const video = videoData.find(v => v.id === videoId);
+    if (iconElement.classList.contains('liked')) {
+        trackEngagement(video, 'like');
+    }
+    // Optional: Add logic to "unlike" and remove engagement points.
+}
+
+/**
+ * Handles the logic when a comment button is clicked.
+ * @param {number} videoId The ID of the video.
+ */
+function handleCommentClick(videoId) {
+    const video = videoData.find(v => v.id === videoId);
+    if (!video || !video.comments || video.comments.length === 0) {
+        console.log("No comments for this video.");
+        return;
+    }
+
+    const modalContainer = document.getElementById('modal-container');
+    let commentsHtml = '';
+    video.comments.forEach(comment => {
+        commentsHtml += `
+            <div class="comment">
+                <span class="comment-author">${comment.author}</span>
+                <span>${comment.text}</span>
+            </div>
+        `;
+    });
+
+    modalContainer.innerHTML = `
+        <div class="modal is-active comment-modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <h3 class="title is-4">Comments</h3>
+                    ${commentsHtml}
+                </div>
+            </div>
+            <button class="modal-close is-large" aria-label="close"></button>
+        </div>
+    `;
+
+    // Add event listener to close the modal
+    modalContainer.querySelector('.modal-close').addEventListener('click', () => {
+        modalContainer.innerHTML = '';
+    });
+    modalContainer.querySelector('.modal-background').addEventListener('click', () => {
+        modalContainer.innerHTML = '';
+    });
+    
+    trackEngagement(video, 'comment');
+}
+
+/**
+ * Handles the logic when a share button is clicked.
+ * @param {number} videoId The ID of the video.
+ */
+function handleShareClick(videoId) {
+    const video = videoData.find(v => v.id === videoId);
+    console.log(`Sharing video: ${video.title}`);
+    // In a real app, this would open a share sheet.
+    // For our simulation, we can just track it as an engagement.
+    trackEngagement(video, 'share');
+    alert('Sharing is not implemented in this simulation, but your engagement has been noted!');
+}
+
+
 function trackEngagement(video, engagementType) {
-  // engagementType can be 'like', 'long_watch', etc.
-  
-  // TODO:
-  // - For each hashtag in `video.hashtags`:
-  //   - If the hashtag is already in `userProfile.engagement`, increment its score.
-  //   - Otherwise, add it with a score of 1.
+  // engagementType can be 'like', 'share', 'comment', 'long_watch', etc.
   console.log(`Engagement with: ${video.title}, type: ${engagementType}`);
+  
+  const engagementWeight = {
+    'like': 2,
+    'comment': 3,
+    'share': 4,
+    'long_watch': 1
+  };
+
+  const weight = engagementWeight[engagementType] || 1;
+
+  video.hashtags.forEach(tag => {
+    if (userProfile.engagement[tag]) {
+      userProfile.engagement[tag] += weight;
+    } else {
+      userProfile.engagement[tag] = weight;
+    }
+  });
+  console.log('Current user profile:', userProfile.engagement);
 }
 
 // The Intersection Observer callback
