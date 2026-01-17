@@ -1,0 +1,64 @@
+/* Basic styling for the feed */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* Prevents scrolling the body itself */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#feed-container {
+  height: 100vh;
+  width: 100vw;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory; /* This is the key for the TikTok-like scroll */
+}
+
+.video-post {
+  height: 100vh;
+  width: 100%;
+  scroll-snap-align: start; /* Each video snaps to the start of the viewport */
+  position: relative;
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-post iframe {
+  width: 100%;
+  height: 100%;
+}
+
+/* TODO: Style the UI elements like author, title, and like button */
+.video-info {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  color: white;
+  z-index: 10;
+}
+
+.like-button {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* Wrapped Page Styles */
+#wrapped-content .box {
+    margin-bottom: 2rem;
+}
+
+#top-hashtags .tag {
+    margin-right: 0.5rem;
+}
+
+#wrapped-content img {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
