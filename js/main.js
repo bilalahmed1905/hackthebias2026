@@ -19,7 +19,7 @@ let simulationState = {
   profileBuilt: false  // Track after initial 6
 };
 
-let userProfile = { engagement: {} }; // tech: 5, music 3
+let userProfile = { engagement: {}, interactionCount: 0}; // tech: 5, music 3
 let ytReady = false;
 let isLoading = false;
 
@@ -80,16 +80,6 @@ function createPost(video) {
       <i class="far fa-paper-plane action-icon" data-action="share" data-video-id="${video.id}"></i>
     </div>
   `;
-
-  // const heartIcon = document.getElementById('heart-icon');
-  //     heartIcon.onclick = function() {
-  //       this.classList.add('.liked');
-  //       if (this.classList.contains('liked')) {
-  //         this.classList.replace('fa-regular', 'fa-solid');
-  //       } else {
-  //         this.classList.replace('fa-solid', 'fa-regular');
-  //       }
-  //     } 
 
   post.appendChild(playerContainer);
   post.appendChild(overlay);
@@ -191,6 +181,7 @@ function createPost(video) {
     }   
   }
     // Create YouTube player
+
 
 function computeNextVideos(num = 2) {
   simulationState.nextVideos = [];
@@ -377,6 +368,7 @@ function setupSnapScroll() {
     }, 100);
   }, { passive: true });
 }
+
     function updateFocusClasses() {
       document.querySelectorAll('.video-post').forEach((post, index) => {
         post.classList.remove('item-focus', 'item-next', 'item-hide');
@@ -472,6 +464,11 @@ function setupSnapScroll() {
 function trackEngagement(video, type) {
   const weights = { like: 3, comment: 4, share: 3, longView: 2, completedView: 7};
   const weight = (weights[type] || 1);
+
+  if (['like', 'comment', 'share'].includes(type)) {
+    userProfile.interactionCount++;
+  }
+  
   const before = { ...userProfile.engagement };
   video.hashtags.forEach(tag => {
     userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;

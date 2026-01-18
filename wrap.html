@@ -18,6 +18,7 @@
     let engagementData = null;
     let feedHistory = null;
     let wrappedStats = {};
+    let totalInteractions = 0;
 
     // Helper functions
     function getRandomVideoByHashtag(hashtag) {
@@ -48,7 +49,7 @@
     const feed = JSON.parse(localStorage.getItem('feedHistory'));
     
     if (userProfile && userProfile.engagement) {
-      engagementData = userProfile.engagement;  // Extract the engagement object
+      engagementData = userProfile;  // Extract the engagement object
       console.log('✅ Loaded user profile:', engagementData);
     } else {
       console.log('⚠️ No user profile found in localStorage');
@@ -76,6 +77,7 @@ function analyzeData() {
   
   // Calculate total from the engagement scores
   const totalEngagement = Object.values(engagementData).reduce((sum, val) => sum + val, 0);
+   totalInteractions = engagementData.interactionCount || 0;  // Get actual click count
   
   // Sort hashtags by engagement score and get top 3
   const sortedHashtags = Object.entries(engagementData)
@@ -156,7 +158,7 @@ function analyzeData() {
       return `
         <div class="slide slide-1">
           <div class="slide-content">
-            <h1>Your DoomScroll<br>Wrapped 2025</h1>
+            <h1>Your DoomScroll<br>Wrapped 2026</h1>
             <p class="subtitle">Let's see how the algorithm shaped your feed...</p>
             <div class="scroll-indicator">↓ Scroll Down ↓</div>
           </div>
@@ -169,7 +171,7 @@ function analyzeData() {
         <div class="slide slide-2">
           <div class="slide-content">
             <h2>You interacted with content</h2>
-            <div class="stat-large">${wrappedStats.totalEngagement}</div>
+            <div class="stat-large">${totalInteractions}</div>
             <p class="subtitle">times across ${wrappedStats.videosWatched} videos</p>
             <p style="font-size: 1.1rem; opacity: 0.8; margin-top: 20px;">
               Each like, comment, and share taught the algorithm more about you
