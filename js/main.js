@@ -13,7 +13,18 @@
         title: 'Ranking Dramatic Husky Moments 😂',
         author: 'accidentalentertianment',
         hashtags: ['funny', 'pets', 'dogs']
-      }
+      }, 
+      {
+        id: 3,
+        videoId: 'GWkswyays5M',
+        title: 'Fate of Ophelia - Taylor Swift', 
+        author: 'Taylor Swift',
+        hashtags: ['music', 'pop']
+      },
+      {
+        id: 4,
+        videoId: '3tmd-ClpJxA',
+        title: 'Dynamite - BTS',}
       // Add more from your main.js when ready
     ];
 
@@ -54,6 +65,8 @@
       setupSnapScroll();
     }
 
+    const threshold = 5000; // 5 second threshhold long 
+
     function createPlayer(video) {
       const feedContainer = document.getElementById('feed-container');
       
@@ -70,8 +83,8 @@
       overlayElement.className = 'video-overlay';
       overlayElement.innerHTML = `
         <div class="video-info">
-          <h1 class="author">${video.author}</h1>
-          <h2 class="title">${video.title}</h2>
+          <h1 style='color:white;' class="author">${video.author}</h1>
+          <h2 style='color:white;' class="title">${video.title}</h2>
         </div>
         <div class="video-actions">
           <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
@@ -92,11 +105,14 @@
           videoId: video.videoId,
           playerVars: {
             autoplay: 1,
-            // playsinline: 1,
+            mute: 1,  // REQUIRED for autoplay to work reliably
+            playsinline: 1,
             controls: 0,
-            mute: 1,
+            fs: 0,     // disable fullscreen
             rel: 0,
-            modestbranding: 1
+            color: 'white',
+            showinfo: 0,  // hide title/uploader
+            iv_load_policy: 3  // hide annotations
           },
           events: {
             onReady: (event) => {
@@ -120,23 +136,37 @@
     }
 
     function setupObserver() {
-      const observer = new IntersectionObserver((entries) => {
+        const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          const post = entry.target;
-          const playerId = post.querySelector('.player-container').id;
-          const player = simulationState.playerObjects[post.dataset.videoId];
+        const post = entry.target;
+        const videoId = parseInt(post.dataset.videoId);
+        const player = simulationState.playerObjects[videoId];
+        const video = videoData.find(v => v.id === videoId);
+      
+      if (entry.isIntersecting && player) {
+        player.playVideo();
+        // Start 8s long view timer
+        const longViewTimer = setTimeout(() => {
+          trackEngagement(video, 'longView');
+          console.log('Long view 8s+:', video.title);
+        }, 8000); // 8 seconds
+        
+        player.longViewTimer = longViewTimer; // Store to clear later
+      } else if (player) {
+        player.pauseVideo();
+        // Clear timer if not viewed 8s
+        if (player.longViewTimer) {
+          clearTimeout(player.longViewTimer);
+          player.longViewTimer = null;
+        }
+      }
+    });
+  }, { threshold: 0.6 }); // Higher threshold for "real" view
 
-          if (entry.isIntersecting && player) {
-            player.playVideo();
-          } else if (player) {
-            player.pauseVideo();
-          }
-        });
-      }, { threshold: 0.5 });
+  simulationState.observer = observer;
+  document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
+}
 
-      simulationState.observer = observer;
-      document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
-    }
 
     function setupSnapScroll() {
       const feedContainer = document.getElementById('feed-container');
@@ -177,6 +207,16 @@
       });
     }
 
+    function loadNextVideo() {
+      const unseenVideos = videoData.filter(v => !simulationState.viewedIds.has(v.id));
+      if (unseenVideos.length === 0) return;
+
+      const nextVideo = unseenVideos[Math.floor(Math.random() * unseenVideos.length)];
+      createPlayer(nextVideo);
+      simulationState.feed.push(nextVideo);
+      simulationState.viewedIds.add(nextVideo.id);
+    }
+
     function updateFocusClasses() {
       document.querySelectorAll('.video-post').forEach((post, index) => {
         post.classList.remove('item-focus', 'item-next', 'item-hide');
@@ -212,7 +252,7 @@
     }
 
     function trackEngagement(video, type) {
-      const weights = { like: 2, comment: 3, share: 4 };
+      const weights = { like: 2, comment: 3, share: 4, longView: 1 };
       const weight = weights[type] || 1;
       
       video.hashtags.forEach(tag => {
