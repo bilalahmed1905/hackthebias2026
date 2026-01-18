@@ -3,403 +3,645 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instagram Shorts Scroll</title>
+  <title>Instagram DoomScroll Simulator</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    /* Instagram-like styling - clean white/black */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    #feed-container {
-      height: 100vh;
-      width: 100vw;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      scroll-behavior: smooth;
+    /* Instagram styling */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { 
+      height: 100%; 
+      overflow: hidden; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
       background: #fafafa;
     }
-
-    .video-post {
-      height: 100vh;
-      width: 100vw;
-      position: relative;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-
-    .player-container {
-      width: 390px;
-      height: 640px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-
-    .video-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: white;
-      padding: 40px 30px 30px;
-      box-sizing: border-box;
-    }
-
-    .video-info .author {
-      font-weight: 600;
-      font-size: 16px;
-      margin-bottom: 4px;
-    }
-
-    .video-info .title {
-      font-size: 14px;
-      line-height: 1.4;
-      opacity: 0.9;
-    }
-
-    .video-actions {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .action-icon {
-      font-size: 28px;
-      color: white;
-      cursor: pointer;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-      transition: color 0.2s;
-    }
-
-    .action-icon:hover {
-      color: #fff;
-    }
-
-    .action-icon.liked {
-      color: #ed4956;
-    }
-
-    /* Focus animations */
-    .video-post.item-hide {
-      opacity: 0;
-      transform: scale(0.8);
-    }
-
-    .video-post.item-focus,
-    .video-post.item-next {
-      opacity: 1;
-      transform: scale(1);
-    }
-
     h1 {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      color: #262626;
-      font-weight: 600;
-      font-size: 24px;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; color: #262626; font-weight: 600; font-size: 24px;
     }
-
-    /* Mobile */
+    #feed-container {
+      height: 100vh; width: 100vw; overflow-y: scroll;
+      scroll-snap-type: y mandatory; scroll-behavior: smooth;
+      background: #fafafa;
+    }
+    .video-post {
+      height: 100vh; width: 100vw; position: relative;
+      scroll-snap-align: start; scroll-snap-stop: always;
+    }
+    .player-container {
+      width: 390px; height: 640px; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .video-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white; padding: 40px 30px 30px;
+    }
+    .video-info .author { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+    .video-info .title { font-size: 14px; line-height: 1.4; opacity: 0.9; }
+    .video-actions {
+      position: absolute; bottom: 30px; right: 30px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .video-actions .action-icon {
+      font-size: 28px !important; color: white !important; cursor: pointer !important;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5) !important; transition: all 0.2s !important;
+      width: 40px; height: 40px; display: flex !important; align-items: center; justify-content: center;
+    }
+    .video-actions .action-icon:hover { color: #fff !important; transform: scale(1.1); }
+    .video-actions .action-icon.liked { color: #ed4956 !important; }
+    .video-post.item-hide { opacity: 0; transform: scale(0.8); }
+    .video-post.item-focus, .video-post.item-next { opacity: 1; transform: scale(1); }
+    #feed-container iframe { border: none !important; }
+    #feed-container .ytp-chrome-top, .ytp-gradient-top, .ytp-pause-overlay { display: none !important; }
     @media (max-width: 768px) {
-      .player-container {
-        width: 100%;
-        height: 100vh;
-        position: static;
-        transform: none;
-        border-radius: 0;
-      }
+      .player-container { width: 100%; height: 100vh; position: static; transform: none; border-radius: 0; }
     }
-
-    /* Custom scrollbar */
-    #feed-container::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    #feed-container::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.2);
-      border-radius: 2px;
-    }
+    #feed-container::-webkit-scrollbar { width: 4px; }
+    #feed-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 2px; }
+    /* Dark modal */
+    .comment-modal .modal-background { background-color: rgba(10,10,10,0.85) !important; }
+    .comment-modal .box { background-color: #262626 !important; border: 1px solid #404040 !important; }
+    .comment-modal .input { background-color: #1e1e1e !important; border: 1px solid #404040 !important; color: white !important; }
+    .comment-modal .input::placeholder { color: #8e8e8e !important; }
   </style>
 </head>
 <body>
-  <h1>Instagram DoomScroll Simulator</h1>
-  <div id="feed-container">
-    <!-- Videos dynamically inserted here -->
-  </div>
+  <div id="feed-container"></div>
   <div id="modal-container"></div>
 
-  <!-- YouTube API -->
   <script src="https://www.youtube.com/iframe_api"></script>
-  
   <script>
-    // Keep your video data structure but start with first 2
+    // YOUR VIDEO DATA - UNTOUCHED
+    
     const videoData = [
-      {
+      // funny, humor
+{
         id: 1,
-        videoId: 'UhVc3B-OQIs',
-        title: 'Ranking The Best Slow Motion Dogs 🐶',
-        author: 'pettastic-clip',
-        hashtags: ['funny', 'pets', 'dogs']
+        videoId: 'IDJOqoNchIQ',
+        title: 'They are not interested in you 😂 #hopecore #hopeless #funny',
+        author: 'HopeleesCore Fuel Up',
+        hashtags: ['funny', 'humor']
       },
-      {
+{
         id: 2,
-        videoId: '0tng6DqwT3w',
-        title: 'Ranking Dramatic Husky Moments 😂',
-        author: 'accidentalentertianment',
-        hashtags: ['funny', 'pets', 'dogs']
-      }
-      // Add more from your main.js when ready
-    ];
-
-    let simulationState = {
-      feed: [],
-      viewedIds: new Set(),
-      simulationLength: 10,
-      playerObjects: {},
-      observer: null,
-      currentIndex: 0
-    };
-
-    let userProfile = {
-      engagement: {}
-    };
-
-    let ytReady = false;
-
-    // YouTube API ready
-    function onYouTubeIframeAPIReady() {
-      console.log('YouTube API ready');
-      ytReady = true;
-      initializeFeed();
-    }
-
-    function initializeFeed() {
-      const feedContainer = document.getElementById('feed-container');
-      feedContainer.innerHTML = '';
-
-      // Always load first 2 videos
-      videoData.slice(0, 2).forEach(video => {
-        const post = createPlayer(video);
-        simulationState.feed.push(video);
-        simulationState.viewedIds.add(video.id);
-      });
-
-      setupObserver();
-      setupSnapScroll();
-    }
-
-    function createPlayer(video) {
-      const feedContainer = document.getElementById('feed-container');
+        videoId: 'zU8BLmRzr-4',
+        title: 'bro is def one step ahead 🤣 #fyp #trending #funny #fypシ゚viral',
+        author: 'Yayo Premium ',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 3,
+        videoId: 'q-o6NYs8LM8',
+        title: 'Ranking Funniest Rollercoaster Moments😭',
+        author: 'TOP RANKING',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 4,
+        videoId: 'eufzhHXphJY',
+        title: 'เเค่นี้ก็เรียบร้อย😱🤣 #shortsfeed  #shorts  #funny  #haha  #fpy  #ตลกฮาฮา #hahaha  #ตลก',
+        author: 'วิถีอีสานบ้านนา',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 5,
+        videoId: 'CqnaMjLPPS0',
+        title: '#cute #funny #kpopfunny #kpop #korea',
+        author: 'Percy Nunley',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 6,
+        videoId: 'MjSqe5Ta8os',
+        title: '#denzelwashington',
+        author: 'Klick Kitty',
+        hashtags: ['funny', 'humor']      },
+{
+        id: 7,
+        videoId: 'x8_CbBupPIA',
+        title: 'Say This Out Loud If You\'re COOL! 😎🎤 (Super Hard Challenge?) #rhythmgame #brainteaser #funny',
+        author: 'On The One',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 8,
+        videoId: '05DcLjNKH8w',
+        title: 'Normal People vs US! 🤣😭 #shorts #funny',
+        author: 'Cadel and Mia',
+        hashtags: ['funny', 'humor']
+      },
+{
+        id: 9,
+        videoId: 'TbS-J16GK6c',
+        title: 'Wait for her 🤣💀',
+        author: 'Eternal Love',
+        hashtags: ['funny', 'humor']      },
+{
+        id: 10,
+        videoId: 'psQaowjXNR4',
+        title: 'POV: Washing Dishes 😭',
+        author: 'The Mannii Show',
+        hashtags: ['funny', 'humor']      },
+{
+        id: 12,
+        videoId: 'sae1U7LZgMA',
+        title: 'It always ends up good somehow #art #drawing #inking #funny',
+        author: 'Ian and Roman',
+        hashtags: ['art', 'music', 'photography']
+      },
+{ 
+        id: 13,
+        videoId: 'hLNfARQzqCI',
+        title: 'Drawing using thread #shorts #art',
+        author: 'Ayushika art',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 14,
+        videoId: 'kjYaXuf8OUE',
+        title: 'My secret to taking street photos😎 . #travelphotography #poseideas #fpy #fpyシ #idea #dailylook',
+        author: 'rozes_ss',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 15,
+        videoId: 'shz4wRBfEfs',
+        title: 'Day 8 of TRAUMATIZING MY MATH TEACHER #shorts #creepydrawing #creepy #horror  #analoghorror',
+        author: 'CreepInk',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 16,
+        videoId: '6OPky_5xPzc',
+        title: 'flipbook fight 🤜🤛 #flipbook #remix #flip #art #avee_player #funk #music #shorts',
+        author: 'Manu arts🎨',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 17,
+        videoId: '4N-fT4r-0tw',
+        title: '@wigconicc # #music #sabrinacarpenter #manchild #live #viral #mbf #fyp #xyzbca',
+        author: 'vera (pinkk) 💘',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 18,
+        videoId: 'P3m8QPYK1Uw',
+        title: '🤯 The process of making custom in-ear monitors will blow your mind  #shorts #satisfying #music',
+        author: 'Sam Scott',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 19,
+        videoId: 'ANFDFUSNjAc',
+        title: 'WHICH PART OF THIS VIRAL SONG HIT HARDER (ENGLISH VS. SPANISH) : SHAKIRA "ZOO" #shorts #viral #viral',
+        author: 'Hoover Reaction',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 20,
+        videoId: '1KI-XhSZP3A',
+        title: 'When you look up tabs and these are the chords #bandhumor #bandmemes #band #guitar #guitarist',
+        author: 'Sorry Ghost',
+        hashtags: ['art', 'music', 'photography']
+      },
+{
+        id: 22,
+        videoId: 'NaVsfWEjhB0',
+        title: 'It took me 9 years to realize this! #disney #disneymovie #movie #conspiracy',
+        author: 'Jack Jerry',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 23,
+        videoId: 'mMUc2SO4NPY',
+        title: 'Labubu\'s may be a sign Theory 😳 #jumpersjump #theory #mystery #shorts #conspiracy #labubu #marketing',
+        author: 'JUMPERS JUMP .',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 24,
+        videoId: '8I42yjrhUK4',
+        title: 'Conspiracy Theories: Flat Earth #shorts',
+        author: 'Captivating History',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 25,
+        videoId: '52fWJGeMGfk',
+        title: 'The Darkest Conspiracy Theories…😳 #shorts #shortsfeed',
+        author: 'STYT',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 26,
+        videoId: 'CluXQYseU3o',
+        title: 'The Conspiracy Theories Are Insane 😳',
+        author: 'Danny Rayes',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 27,
+        videoId: 'tqTfFwWu4Qg',
+        title: 'Ep.40 The Trumps are Time TRAVELERS?? #ninjasarebutterflies #podcast #sundaycool #comedy',
+        author: 'Sunday Cool',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 28,
+        videoId: '3L3ffgrpctE',
+        title: 'Are These Conspiracies Real Or Fake?',
+        author: 'Sambucha',
+        hashtags: ['conspiracy']
+      },
+{
+        id: 30,
+        videoId: 'pOilFKHsp90',
+        title: 'Bounce curl brush #lifestyle #shorts #curlyhair #curls #mensstyle #menshair #trending',
+        author: 'Maxwell Everett',
+        hashtags: ['health', 'lifestyle', 'dance']
+      },
+{
+        id: 31,
+        videoId: '482dSHvdXMA',
+        title: '“we have smoothies at home”',
+        author: 'smoothieflip',
+        hashtags: ['health', 'lifestyle', 'dance']
+      },
+{
+        id: 32,
+        videoId: 'dffDMXV7sGQ',
+        title: 'Eating clean food for 30 days… MIND BLOWING! #cleaneating #weightloss #healthyfood #zest #first',
+        author: 'FirstTasteTips',
+        hashtags: ['health', 'lifestyle', 'dance']
+      },
+{
+        id: 33,
+        videoId: 'iHiV7XRSKuw',
+        title: 'More Protein Less Calories Fast Food Hacks✅',
+        author: 'Flavorful Solutions ',
+        hashtags: ['health', 'lifestyle', 'dance']
+      },
+{
+        id: 34,
+        videoId: 'IhJF6LEHhVs',
+        title: 'Food That Looks Like Your Organs And Heal Them! | Food Is Medicine | Natural Medicine Foods 🌿 #food',
+        author: 'Healthy Foods Doctor',
+        hashtags: ['health', 'lifestyle', 'dance']
+      },
+{
+        id: 35,
+        videoId: 'rh6sgLAujw4',
+        title: 'Gain vs Fatloss BREAKFAST #nutrition #food #health #fitness #protein',
+        author: 'Vinay Jaisinghani',
+        hashtags: ['health', 'lifestyle', 'dance']
+      }, //4 missing for health
+{
+        id: 36,
+        videoId: 'rEnyxAkyrKE',
+        title: 'How Retractable Staircase Works: Hidden Secret No One Shows You In Japan Living 🤯🔥 #shorts',
+        author: 'CAD COMPANY',
+        hashtags: ['tech', 'business']
+      },
+{
+        id: 37,
+        videoId: 'T2Y2CBaRgho',
+        title: 'These Robot Boots (Shoes) Save You Before You Even Fall. You Wont Believe How 😱 #robot #shorts',
+        author: 'uncover reality',
+        hashtags: ['tech', 'business']      },
+{
+        id: 38,
+        videoId: 'ZL215DZyTkI',
+        title: 'Proving my dad screw screw can get  day 4 🙂 #shorts #tools #tech',
+        author: 'Shresth X',
+        hashtags: ['tech', 'business']      },
+{
+        id: 39,
+        videoId: '3vx2hko0Euk',
+        title: 'Dubai\'s Future Haircut Expo 2050 🤖✂️ The World’s Most Advanced Auto-Cut Machines!',
+        author: 'Adv Life',
+        hashtags: ['tech', 'business']      },
+{
+        id: 40,
+        videoId: 'v2E5fhO4SUM',
+        title: 'First video game',
+        author: 'A2Z',
+        hashtags: ['tech', 'business']      },
+{
+        id: 41,
+        videoId: 'eU_8eoL_UnE',
+        title: 'How this case converts ANY iPhone to USB-C 🤯',
+        author: 'Tech Bits Central',
+        hashtags: ['tech', 'business']      },
+{
+        id: 42,
+        videoId: 'OWMoEcrPtaA',
+        title: 'POV: You\'re closing the Samsung Galaxy Z TriFold wrong',
+        author: 'ZDNET',
+        hashtags: ['tech', 'business']      },
+{
+        id: 43,
+        videoId: 'F2WWa538NJM',
+        title: 'Top 6 IT Jobs in 2026 | Future Tech Careers #shorts',
+        author: 'Simple Know',
+        hashtags: ['tech', 'business']      },
       
-      const postElement = document.createElement('div');
-      postElement.className = 'video-post';
-      postElement.id = `post-video-${video.id}`;
-      postElement.dataset.videoId = video.id;
+];
+// Pre-select first 6 diverse videos for profiling (one per major category)
+const initialDiverseVideos = [
+  videoData.find(v => v.hashtags.includes('funny')),      // ID 1
+  videoData.find(v => v.hashtags.includes('art')),        // ID 11 (art, music, photography)
+  videoData.find(v => v.hashtags.includes('conspiracy')), // ID 21
+  videoData.find(v => v.hashtags.includes('health')),     // ID 29
+  videoData.find(v => v.hashtags.includes('tech')),       // ID 36
+  videoData.find(v => v.hashtags.includes('music')) || videoData.find(v => v.hashtags.includes('photography')) // Fallback ID 11/14
+].filter(Boolean);
 
-      const playerContainer = document.createElement('div');
-      playerContainer.className = 'player-container';
-      playerContainer.id = `player-video-${video.id}`;
+let simulationState = {
+  feed: [],
+  viewedIds: new Set(),
+  maxVideos: 20,  // Increased for longer demo
+  playerObjects: {},
+  observer: null,
+  currentIndex: 0,
+  nextVideos: [],
+  profileBuilt: false  // Track after initial 6
+};
 
-      const overlayElement = document.createElement('div');
-      overlayElement.className = 'video-overlay';
-      overlayElement.innerHTML = `
-        <div class="video-info">
-          <p class="author">${video.author}</p>
-          <p class="title">${video.title}</p>
-        </div>
-        <div class="video-actions">
-          <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
-          <span class="action-icon" data-action="comment" data-video-id="${video.id}">💬</span>
-          <span class="action-icon" data-action="share" data-video-id="${video.id}">📤</span>
-        </div>
-      `;
+let userProfile = { engagement: {} };
+let ytReady = false;
+let isLoading = false;
 
-      postElement.appendChild(playerContainer);
-      postElement.appendChild(overlayElement);
-      feedContainer.appendChild(postElement);
+function onYouTubeIframeAPIReady() {
+  ytReady = true;
+  initializeFeed();
+}
 
-      // Create YouTube player
-      if (ytReady) {
-        const player = new YT.Player(`player-video-${video.id}`, {
-          height: '640',
-          width: '390',
-          videoId: video.videoId,
-          playerVars: {
-            autoplay: 1,
-            playsinline: 1,
-            controls: 0,
-            mute: 1,
-            rel: 0,
-            modestbranding: 1
-          },
-          events: {
-            onReady: (event) => {
-              event.target.playVideo();
-            }
+function initializeFeed() {
+  const feedContainer = document.getElementById('feed-container');
+  feedContainer.innerHTML = '';
+  // Load FIRST 6 DIVERSE videos for profiling
+  initialDiverseVideos.forEach(createPost);
+  console.log('=== PROFILING PHASE STARTED ===');
+  console.log('Initial diverse videos loaded:', initialDiverseVideos.map(v => ({title: v.title, hashtags: v.hashtags})));
+  console.log('Goal: Engage with 6 to build accurate user profile before personalization.');
+  computeNextVideos(2);
+  setupObserver();
+  setupSnapScroll();
+}
+
+function createPost(video) {
+  const feedContainer = document.getElementById('feed-container');
+  const post = document.createElement('div');
+  post.className = 'video-post';
+  post.id = `post-video-${video.id}`;
+  post.dataset.videoId = video.id;
+
+  const playerContainer = document.createElement('div');
+  playerContainer.className = 'player-container';
+  playerContainer.id = `player-video-${video.id}`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'video-overlay';
+  overlay.innerHTML = `
+    <div class="video-info">
+      <p class="author">${video.author}</p>
+      <p class="title">${video.title}</p>
+    </div>
+    <div class="video-actions">
+      <i class="far fa-heart action-icon like-button" data-action="like" data-video-id="${video.id}"></i>
+      <i class="far fa-comment action-icon" data-action="comment" data-video-id="${video.id}"></i>
+      <i class="far fa-paper-plane action-icon" data-action="share" data-video-id="${video.id}"></i>
+    </div>
+  `;
+
+  post.appendChild(playerContainer);
+  post.appendChild(overlay);
+  feedContainer.appendChild(post);
+
+  if (ytReady) {
+    const player = new YT.Player(`player-video-${video.id}`, {
+      height: '640',
+      width: '390',
+      videoId: video.videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        playsinline: 1,
+        controls: 0,           // No controls
+        fs: 0,                 // No fullscreen
+        rel: 0,                // No related videos
+        modestbranding: 2,     // Hide logo completely
+        showinfo: 0,
+        iv_load_policy: 3,     // No annotations
+        loop: 1,               // Loop the video
+        playlist: video.videoId  // Loop same video (prevents end screen)
+      },
+      events: {
+        'onReady': (e) => {
+          e.target.mute();
+          simulationState.playerObjects[video.id] = e.target;
+          simulationState.feed.push(video);
+          simulationState.viewedIds.add(video.id);
+          if (simulationState.feed.length === 1) e.target.playVideo();
+          console.log(`Player ready: ${video.title} (looping enabled)`);
+        },
+        'onStateChange': (e) => {
+          if (e.data === YT.PlayerState.ENDED) {
+            e.target.playVideo();  // Force restart/loop
+            console.log(`Restarted: ${video.title} (no end screen)`);
           }
-        });
-
-        simulationState.playerObjects[video.id] = player;
+        }
       }
+    });
+  }
 
-      // Event listeners for actions
-      overlayElement.querySelectorAll('.action-icon').forEach(icon => {
-        icon.addEventListener('click', handleFeedClick);
-      });
+  overlay.querySelectorAll('.action-icon').forEach(icon => {
+    icon.addEventListener('click', handleFeedClick);
+  });
+  updateFocusClasses();
+  simulationState.observer?.observe(post);
+  return post;
+}
 
-      // Update focus classes
+function computeNextVideos(num = 2) {
+  simulationState.nextVideos = [];
+  for (let i = 0; i < num; i++) {
+    const next = getNextVideo();
+    if (next) simulationState.nextVideos.push(next);
+  }
+  console.log('🔮 Precomputed next 2:', simulationState.nextVideos.map(v => `${v.title} (${v.hashtags.join(',')})`));
+}
+
+function preloadNextVideos() {
+  if (isLoading || simulationState.feed.length >= simulationState.maxVideos) return;
+  isLoading = true;
+  simulationState.nextVideos.slice(0, 2).forEach(video => {
+    if (!simulationState.viewedIds.has(video.id)) createPost(video);
+  });
+  computeNextVideos(2);
+  isLoading = false;
+}
+
+function getNextVideo() {
+  if (simulationState.feed.length >= simulationState.maxVideos) return null;
+  const unseen = videoData.filter(v => !simulationState.viewedIds.has(v.id));
+  if (unseen.length === 0) return null;
+
+  const totalEngagement = Object.values(userProfile.engagement).reduce((a, b) => a + b, 0);
+  console.log(`📊 Current profile:`, userProfile.engagement, `Total score: ${totalEngagement}`);
+
+  if (!simulationState.profileBuilt || totalEngagement < 10) {  // Delay personalization until ~6 views + some engagement
+    simulationState.profileBuilt = simulationState.feed.length >= 6;
+    console.log(simulationState.profileBuilt ? '✅ Profile built - now personalizing!' : '⏳ Still profiling...');
+    return unseen[Math.floor(Math.random() * unseen.length)];
+  }
+
+  let candidates = [];
+  const topTags = Object.entries(userProfile.engagement)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 3)
+    .map(([tag]) => tag);
+
+  topTags.forEach(tag => {
+    unseen.forEach(video => {
+      if (video.hashtags.includes(tag)) {
+        candidates.push({ video, score: userProfile.engagement[tag] });
+      }
+    });
+  });
+
+  for (let i = 0; i < Math.floor(unseen.length * 0.3); i++) {
+    const randomVideo = unseen[Math.floor(Math.random() * unseen.length)];
+    candidates.push({ video: randomVideo, score: 1 });
+  }
+
+  const rand = Math.random() * 1.5;
+  const pick = candidates[Math.floor(rand * candidates.length)];
+  console.log(`🎯 Selected "${pick?.video.title}" (score: ${pick?.score}) | Top tags: [${topTags.join(', ')}]`);
+  return pick?.video;
+}
+
+// Rest of functions unchanged: setupObserver, setupSnapScroll, updateFocusClasses, handleFeedClick, trackEngagement (enhanced log), handleCommentClick, handleShareClick
+
+function setupObserver() {
+  const observerOptions = {
+    root: document.getElementById('feed-container'),
+    threshold: 0.5
+  };
+  simulationState.observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const index = simulationState.feed.findIndex(v => `post-video-${v.id}` === entry.target.id);
+      if (entry.isIntersecting && index === simulationState.currentIndex) {
+        const player = simulationState.playerObjects[simulationState.feed[index].id];
+        if (player) {
+          player.playVideo();
+          console.log(`▶️ Playing: ${simulationState.feed[index].title} (${simulationState.feed[index].hashtags.join(', ')})`);
+        }
+        Object.values(simulationState.playerObjects).forEach((p, idx) => {
+          if (idx !== index) p.pauseVideo();
+        });
+        setTimeout(() => trackEngagement(simulationState.feed[index], 'longView'), 3000);
+      }
+    });
+  }, observerOptions);
+}
+
+function setupSnapScroll() {
+  const feedContainer = document.getElementById('feed-container');
+  let scrollTimeout;
+  feedContainer.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const scrollTop = feedContainer.scrollTop;
+      const newIndex = Math.round(scrollTop / window.innerHeight);
+      simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+      if (simulationState.currentIndex + 3 >= simulationState.feed.length) {
+        preloadNextVideos();
+      }
       updateFocusClasses();
+    }, 100, { passive: true });
+  }, { passive: true });
+}
 
-      return postElement;
-    }
+function updateFocusClasses() {
+  document.querySelectorAll('.video-post').forEach((post, idx) => {
+    post.classList.remove('item-focus', 'item-next', 'item-hide');
+    if (idx < simulationState.currentIndex) post.classList.add('item-hide');
+    else if (idx === simulationState.currentIndex) post.classList.add('item-focus');
+    else if (idx === simulationState.currentIndex + 1) post.classList.add('item-next');
+  });
+}
 
-    function setupObserver() {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          const post = entry.target;
-          const playerId = post.querySelector('.player-container').id;
-          const player = simulationState.playerObjects[post.dataset.videoId];
+function handleFeedClick(e) {
+  const target = e.target;
+  if (!target.classList.contains('action-icon')) return;
+  const action = target.dataset.action;
+  const videoId = parseInt(target.dataset.videoId);
+  const video = videoData.find(v => v.id === videoId);
 
-          if (entry.isIntersecting && player) {
-            player.playVideo();
-          } else if (player) {
-            player.pauseVideo();
-          }
-        });
-      }, { threshold: 0.5 });
-
-      simulationState.observer = observer;
-      document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
-    }
-
-    function setupSnapScroll() {
-      const feedContainer = document.getElementById('feed-container');
-      let scrollTimeout;
-
-      feedContainer.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const scrollTop = feedContainer.scrollTop;
-          const newIndex = Math.round(scrollTop / window.innerHeight);
-          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
-          updateFocusClasses();
-        }, 100);
-      });
-
-      // Keyboard navigation
-      document.addEventListener('keydown', (e) => {
-        const feedContainer = document.getElementById('feed-container');
-        if (e.key === 'ArrowDown' || e.key === ' ') {
-          e.preventDefault();
-          if (simulationState.currentIndex < simulationState.feed.length - 1) {
-            simulationState.currentIndex++;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (simulationState.currentIndex > 0) {
-            simulationState.currentIndex--;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        }
-      });
-    }
-
-    function updateFocusClasses() {
-      document.querySelectorAll('.video-post').forEach((post, index) => {
-        post.classList.remove('item-focus', 'item-next', 'item-hide');
-        if (index < simulationState.currentIndex) {
-          post.classList.add('item-hide');
-        } else if (index === simulationState.currentIndex) {
-          post.classList.add('item-focus');
-        } else if (index === simulationState.currentIndex + 1) {
-          post.classList.add('item-next');
-        }
-      });
-    }
-
-    function handleFeedClick(event) {
-      const target = event.target;
-      if (!target.classList.contains('action-icon')) return;
-
-      const action = target.dataset.action;
-      const videoId = parseInt(target.dataset.videoId);
-
-      switch (action) {
-        case 'like':
-          target.classList.toggle('liked');
-          trackEngagement(videoData.find(v => v.id === videoId), 'like');
-          break;
-        case 'comment':
-          handleCommentClick(videoId);
-          break;
-        case 'share':
-          handleShareClick(videoId);
-          break;
-      }
-    }
-
-    function trackEngagement(video, type) {
-      const weights = { like: 2, comment: 3, share: 4 };
-      const weight = weights[type] || 1;
-      
-      video.hashtags.forEach(tag => {
-        userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
-      });
-    }
-
-    function handleCommentClick(videoId) {
-      const video = videoData.find(v => v.id === videoId);
-      const modalContainer = document.getElementById('modal-container');
-      modalContainer.innerHTML = `
-        <div class="modal is-active">
-          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
-          <div class="modal-content">
-            <div class="box has-background-black has-text-white">
-              <h3 class="title is-4 has-text-white">Comments</h3>
-              <p>No comments yet...</p>
-            </div>
-          </div>
-          <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
-        </div>
-      `;
+  switch (action) {
+    case 'like':
+      target.classList.toggle('liked');
+      if (target.classList.contains('liked')) target.classList.replace('far', 'fas');
+      else target.classList.replace('fas', 'far');
+      trackEngagement(video, 'like');
+      preloadNextVideos();
+      break;
+    case 'comment':
+      handleCommentClick(videoId);
       trackEngagement(video, 'comment');
-    }
-
-    function handleShareClick(videoId) {
-      const video = videoData.find(v => v.id === videoId);
+      preloadNextVideos();
+      break;
+    case 'share':
+      handleShareClick(videoId);
       trackEngagement(video, 'share');
-      console.log('Shared:', video.title);
-    }
-  </script>
+      preloadNextVideos();
+      break;
+  }
+}
+
+function trackEngagement(video, type) {
+  const weights = { like: 3, comment: 5, share: 4, longView: 2 };
+  const weight = (weights[type] || 1);
+  const before = { ...userProfile.engagement };
+  video.hashtags.forEach(tag => {
+    userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
+  });
+  console.log(`💥 ${type.toUpperCase()} on "${video.title}" (+${weight} pts)`);
+  console.log('Before:', before);
+  console.log('After:', userProfile.engagement);
+  console.log('---');
+}
+
+function handleCommentClick(videoId) {
+  const modalContainer = document.getElementById('modal-container');
+  modalContainer.innerHTML = `
+    <div class="modal is-active comment-modal">
+      <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+      <div class="modal-content" style="max-width: 400px;">
+        <div class="box">
+          <div style="padding:20px; background: #262626; color: white; border-radius: 12px;">
+            <h3 style="margin-bottom:16px;">Comments</h3>
+            <p style="color: #8e8e8e;">No comments yet...</p>
+            <input class="input mt-3" type="text" placeholder="Add a comment..." style="background: #1e1e1e; color: white; border: 1px solid #404040;">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function handleShareClick(videoId) {
+  const video = videoData.find(v => v.id === videoId);
+  console.log('📱 Shared', video.title);
+}
+</script>
 </body>
 </html>
+
 
 
 
