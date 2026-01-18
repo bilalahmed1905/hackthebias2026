@@ -2,7 +2,6 @@ import videoData from './videoData.js';
 
 const initialDiverseVideos = [
   videoData.find(v => v.hashtags.includes('funny')),      // ID 1
-  videoData.find(v => v.hashtags.includes('art')),        // ID 11 (art, music, photography)
   videoData.find(v => v.hashtags.includes('conspiracy')), // ID 21
   videoData.find(v => v.hashtags.includes('health')),     // ID 29
   videoData.find(v => v.hashtags.includes('tech')),       // ID 36
@@ -20,11 +19,9 @@ let simulationState = {
   profileBuilt: false  // Track after initial 6
 };
 
-let userProfile = { engagement: {} };
+let userProfile = { engagement: {} }; // tech: 5, music 3
 let ytReady = false;
 let isLoading = false;
-
-let prevId = null;
 
 // Replace lines 28-32 with this:
 
@@ -69,7 +66,7 @@ function createPost(video) {
   overlay.className = 'video-overlay';
   overlay.innerHTML = `
     <div class="video-info">
-      <p class="author">${video.author}</p>
+      <p class="author">@${video.author}</p>
       <p class="title">${video.title}</p>
     </div>
     <div class="video-actions">
@@ -236,7 +233,7 @@ window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 function setupSnapScroll() {
   const feedContainer = document.getElementById('feed-container');
   let scrollTimeout;
-  let lastValidIndex = 0;
+  let deletedVideoIds = new Set(); // Track which videos we've already deleted
 
   // Block arrow up key
   document.addEventListener('keydown', (e) => {
@@ -266,17 +263,14 @@ function setupSnapScroll() {
       simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
       
       // Delete the video DIRECTLY above when scrolling forward
-      if (simulationState.currentIndex > previousIndex && simulationState.currentIndex >= 1) {
-        const indexToDelete = simulationState.currentIndex - 1;
-        const videoToDelete = simulationState.feed[indexToDelete];
+      if (simulationState.currentIndex > previousIndex && previousIndex >= 0) {
+        const videoToDelete = simulationState.feed[previousIndex];
         
-        if (videoToDelete) {
+        // Only delete if we haven't already AND it's not the current video
+        if (videoToDelete && !deletedVideoIds.has(videoToDelete.id)) {
           deletePlayer(videoToDelete.id);
-          
-          // Special case: first deletion
-          if (simulationState.currentIndex === 1) {
-            console.log('📍 First video (index 0) deleted!');
-          }
+          deletedVideoIds.add(videoToDelete.id);
+          console.log(`🗑️ Deleted video at index ${previousIndex}: ${videoToDelete.title}`);
         }
       }
       
@@ -341,6 +335,7 @@ function trackEngagement(video, type) {
 function handleCommentClick(videoId) {
   const modalContainer = document.getElementById('modal-container');
   modalContainer.innerHTML = `
+  <form id="comment-form" onsubmit=""; document.getElementById('modal-container').innerHTML='';">
     <div class="modal is-active comment-modal">
       <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
       <div class="modal-content" style="max-width: 400px;">
@@ -353,6 +348,7 @@ function handleCommentClick(videoId) {
         </div>
       </div>
     </div>
+    </form>
   `;
 }
 

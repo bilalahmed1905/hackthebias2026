@@ -74,13 +74,6 @@ const videoData = [
         author: 'Ian and Roman',
         hashtags: ['art', 'music', 'photography']
       },
-{ 
-        id: 13,
-        videoId: 'hLNfARQzqCI',
-        title: 'Drawing using thread #shorts #art',
-        author: 'Ayushika art',
-        hashtags: ['art', 'music', 'photography']
-      },
 {
         id: 14,
         videoId: 'kjYaXuf8OUE',
@@ -178,13 +171,6 @@ const videoData = [
         title: 'Are These Conspiracies Real Or Fake?',
         author: 'Sambucha',
         hashtags: ['conspiracy']
-      },
-{
-        id: 31,
-        videoId: '482dSHvdXMA',
-        title: '“we have smoothies at home”',
-        author: 'smoothieflip',
-        hashtags: ['health', 'lifestyle', 'dance']
       },
 {
         id: 32,
