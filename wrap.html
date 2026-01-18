@@ -5,19 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your DoomScroll Wrapped 2025</title>
   <link rel="stylesheet" href="css/wrapper.css">
-  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"> -->
-  
 </head>
 <body>
   <div class="wrapper" id="wrapper">
     <!-- Slides dynamically generated here -->
   </div>
-  <script type = "module" src="js/wrapped.js"></script>
-  <script>
+  
+  <script type="module">
+    import videoData from './js/videoData.js';
+
     // Data structures
     let engagementData = null;
     let feedHistory = null;
     let wrappedStats = {};
+
+    // Helper functions
+    function getRandomVideoByHashtag(hashtag) {
+      console.log("hashtag", hashtag);
+      const filtered = videoData.filter(v => 
+        v.hashtags.includes(hashtag) && !feedHistory.find(seen => seen.videoId === v.videoId)
+      );
+      if (filtered.length === 0) return null;
+      const randomIndex = Math.floor(Math.random() * filtered.length);
+      return filtered[randomIndex];
+    }
 
     // Initialize on load
     window.addEventListener('DOMContentLoaded', () => {
@@ -50,27 +61,21 @@
     }
 
     function analyzeData() {
-      // Calculate total engagement
       const totalEngagement = Object.values(engagementData).reduce((sum, val) => sum + val, 0);
       
-      // Sort hashtags by engagement
       const sortedHashtags = Object.entries(engagementData)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3);
       
-      // Determine dominant bias based on engagement patterns
-      const topHashtag = sortedHashtags[0];
+      const topHashtag = sortedHashtags[0][0];
       const dominantBias = determineBias(sortedHashtags, totalEngagement);
-      
-      // Calculate diversity score (how varied the content was)
       const diversityScore = calculateDiversity(engagementData);
-      
-      // Calculate engagement concentration (filter bubble intensity)
       const concentration = sortedHashtags[0][1] / totalEngagement * 100;
       
       wrappedStats = {
         totalEngagement,
         sortedHashtags,
+        topHashtag,
         dominantBias,
         diversityScore,
         concentration,
@@ -107,8 +112,6 @@
       const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
       const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
       const stdDev = Math.sqrt(variance);
-      
-      // Lower standard deviation = more diverse, higher = more concentrated
       return Math.max(0, Math.min(100, 100 - (stdDev * 10)));
     }
 
@@ -127,8 +130,6 @@
       ];
       
       wrapper.innerHTML = slides.join('');
-      
-      // Enable keyboard navigation
       setupKeyboardNav();
     }
 
@@ -233,40 +234,44 @@
       `;
     }
 
-    // function createFutureSlide() {
-    //   const topic = feedHistory[0]?.hashtags[0] || 'varied';
-    //   console.log(topic);
+    function createFutureSlide() {
+      const topTag = wrappedStats.topHashtag;
+      
+      // Get 3 random videos that match the top hashtag and haven't been seen
+      const futureVideos = [];
+      
+      for (let i = 0; i < 3; i++) {
+        const video = getRandomVideoByHashtag(topTag);
+        if (video) futureVideos.push(video);
+      }
+      
+      // Fallback if not enough videos
+      if (futureVideos.length === 0) {
+        futureVideos.push(...feedHistory.slice(0, 3));
+      }
+      
+      const videosHTML = futureVideos.map(v => `
+        <div class="video-snapshot future">
+          <img src="https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg" alt="${v.title}">
+          <div class="video-label">Recommended</div>
+        </div>
+      `).join('');
 
-    //   const futureVid = videoD
-    //   const snapshots = [
-    //     getRandomVideoByHashtag(topic),getRandomVideoByHashtag(topic),getRandomVideoByHashtag(topic)
-    //   ].filter(v => v);
-      
-    //   const videosHTML = snapshots.map((video, index) => `
-    //     <div class="video-snapshot">
-    //       <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg" alt="${video.title}">
-    //       <div class="video-label">Video ${index === 0 ? '1' : index === 1 ? Math.floor(feedHistory.length / 2) + 1 : feedHistory.length}</div>
-    //     </div>
-    //   `).join('');
-      
-    //   return `
-    //     <div class="slide slide-5">
-    //       <div class="slide-content">
-    //         <h2>Your Content Journey</h2>
-    //         <p class="subtitle">See how your feed evolved</p>
-    //         <div class="video-grid">
-    //           ${videosHTML}
-    //         </div>
-    //         <p style="font-size: 1.1rem; opacity: 0.8; margin-top: 20px;">
-    //           Notice how similar they became? That's the algorithm at work.
-    //         </p>
-    //       </div>
-    //     </div>
-    //   `;
-    // }
+      return `
+        <div class="slide extrapolation-slide">
+          <div class="slide-content">
+            <h2>Your Algorithmic Destiny</h2>
+            <p>Based on your #${topTag} interest, here is what your feed looks like tomorrow:</p>
+            <div class="video-grid">
+              ${videosHTML}
+            </div>
+            <p class="warning-text">The algorithm has stopped showing you new perspectives.</p>
+          </div>
+        </div>
+      `;
+    }
 
     function createBiasRevealSlide() {
-      //const severityColor = wrappedStats.dominantBias.severity === 'high' ? '#ff4444' : '#ffa500';
       const severityColor = 'white';
       return `
         <div class="slide slide-6">
@@ -345,7 +350,6 @@
         }
       });
       
-      // Update current slide on scroll
       const wrapper = document.getElementById('wrapper');
       wrapper.addEventListener('scroll', () => {
         const scrollPosition = wrapper.scrollTop;
@@ -353,8 +357,6 @@
         currentSlide = Math.round(scrollPosition / slideHeight);
       });
     }
-
-    
   </script>
 </body>
 </html>

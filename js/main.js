@@ -110,15 +110,15 @@ function createPost(video) {
     </div>
   `;
 
-  const heartIcon = document.getElementById('heart-icon');
-      heartIcon.onclick = function() {
-        this.classList.add('.liked');
-        if (this.classList.contains('liked')) {
-          this.classList.replace('fa-regular', 'fa-solid');
-        } else {
-          this.classList.replace('fa-solid', 'fa-regular');
-        }
-      } 
+  // const heartIcon = document.getElementById('heart-icon');
+  //     heartIcon.onclick = function() {
+  //       this.classList.add('.liked');
+  //       if (this.classList.contains('liked')) {
+  //         this.classList.replace('fa-regular', 'fa-solid');
+  //       } else {
+  //         this.classList.replace('fa-solid', 'fa-regular');
+  //       }
+  //     } 
 
   post.appendChild(playerContainer);
   post.appendChild(overlay);
@@ -171,27 +171,6 @@ function createPost(video) {
   return post;
 }
 
-  // YouTube API ready
-  function onYouTubeIframeAPIReady() {
-    console.log('YouTube API ready');
-    ytReady = true;
-    initializeFeed();
-  }
-
-  function initializeFeed() {
-    const feedContainer = document.getElementById('feed-container');
-    feedContainer.innerHTML = '';
-
-    // Always load first 2 videos
-    videoData.slice(0, 2).forEach(video => {
-      const post = createPlayer(video);
-      simulationState.feed.push(video);
-      simulationState.viewedIds.add(video.id);
-    });
-
-    setupObserver();
-    setupSnapScroll();
-  }
 
   function createPlayer(video) {
     const feedContainer = document.getElementById('feed-container');
@@ -208,23 +187,23 @@ function createPost(video) {
     const overlayElement = document.createElement('div');
     overlayElement.className = 'video-overlay';
     overlayElement.innerHTML = `
-      <div class="video-info">
-        <h2 class="author">${video.author}</h2>
-        <h2 class="title">${video.title}</h2>
-      </div>
-      <div class="video-actions">
-          <span class="action-icon" data-video-id="${video.id}">
-          <i class="far fa-comment" onClick="handleCommentClick(${video.id})"></i>
-          </span>
-          <span class="action-icon" id="heart-icon" data-video-id="${video.id}">
-          <i class="far fa-heart" onClick="handleLikeClick(document.getElementById('heart-icon'))"></i>
-          </span>
-          <span class="action-icon" data-action="share" data-video-id="${video.id}">
-          <i class="far fa-paper-plane"></i>
-          </span>
+        <div class="video-info">
+          <h2 class="author">${video.author}</h2>
+          <h2 class="title">${video.title}</h2>
+        </div>
+        <div class="video-actions">
+           <span class="action-icon" data-video-id="${video.id}">
+            <i class="far fa-comment" onClick="handleCommentClick(${video.id})"></i>
+           </span>
+           <span class="action-icon" id="heart-icon" data-video-id="${video.id}">
+            <i class="far fa-heart" onClick="handleLikeClick(document.getElementById('heart-icon'))"></i>
+           </span>
+           <span class="action-icon" data-action="share" data-video-id="${video.id}">
+            <i class="far fa-paper-plane"></i>
+           </span>
 
-      </div>
-    `;
+        </div>
+      `;
 
     postElement.appendChild(playerContainer);
     postElement.appendChild(overlayElement);
@@ -505,14 +484,7 @@ function setupSnapScroll() {
       }
     }
 
-    function trackEngagement(video, type) {
-      const weights = { like: 2, comment: 3, share: 4 };
-      const weight = weights[type] || 1;
-      
-      video.hashtags.forEach(tag => {
-        userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
-      });
-    }
+    
 
     function handleLikeClick(element) {
   // 'element' refers to the icon that was clicked
@@ -526,34 +498,7 @@ function setupSnapScroll() {
       }
       trackEngagement(videoData.find(v => v.id === videoId), 'like');
     }
-    function handleCommentClick(videoId) {
-      const video = videoData.find(v => v.id === videoId);
-      const modalContainer = document.getElementById('modal-container');
-      
-      modalContainer.innerHTML = `
-        <div class="modal is-active comment-modal">
-          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
-          <div class="modal-content" style="max-width: 400px;">
-            <div class="box has-background-black-bis has-text-white-bis" style="border-radius: 12px;">
-              <div class="modal-card-head has-background-black-bis pb-4">
-                <p class="modal-card-title has-text-white-bis mb-0">Comments</p>
-                <button class="delete" style="position: absolute; right: 10px; top: 10px;" onclick="document.getElementById('modal-container').innerHTML=''"></button>
-              </div>
-              <div class="modal-card-body p-4">
-                <p class="has-text-grey-light mb-4">No comments yet... 💬</p>
-                <div class="field">
-                  <div class="control">
-                    <input class="input has-background-grey-darker has-text-white" type="text" placeholder="Add a comment...">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      trackEngagement(video, 'comment');
-    }
+  
     
     function handleCommentClick1(videoId) {
       const video = videoData.find(v => v.id === videoId);
@@ -622,6 +567,7 @@ function handleCommentClick(videoId) {
       </div>
     </div>
   `;
+  trackEngagement(video, 'comment');
 }
 
 function handleShareClick(videoId) {
