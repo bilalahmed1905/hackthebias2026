@@ -1,132 +1,58 @@
-* {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    #feed-container {
-      height: 100vh;
-      width: 100vw;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
-      scroll-behavior: smooth;
+/* Instagram styling */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { 
+      height: 100%; 
+      overflow: hidden; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
       background: #fafafa;
     }
-
-    .video-post {
-      height: 100vh;
-      width: 100vw;
-      position: relative;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-    }
-
-    .player-container {
-      width: 390px;
-      height: 640px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-
-    .video-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: white;
-      padding: 40px 30px 30px;
-      box-sizing: border-box;
-    }
-
-    .video-info .author {
-      font-weight: 600;
-      font-size: 16px;
-      margin-bottom: 4px;
-    }
-
-    .video-info .title {
-      font-size: 14px;
-      line-height: 1.4;
-      opacity: 0.9;
-    }
-
-    .video-actions {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .action-icon {
-      font-size: 28px;
-      color: white;
-      cursor: pointer;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-      transition: color 0.2s;
-    }
-
-    .action-icon:hover {
-      color: #fff;
-    }
-
-    .action-icon.liked {
-      color: #ed4956;
-    }
-
-    /* Focus animations */
-    .video-post.item-hide {
-      opacity: 0;
-      transform: scale(0.8);
-    }
-
-    .video-post.item-focus,
-    .video-post.item-next {
-      opacity: 1;
-      transform: scale(1);
-    }
-
     h1 {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      color: #262626;
-      font-weight: 600;
-      font-size: 24px;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; color: #262626; font-weight: 600; font-size: 24px;
     }
-
-    /* Mobile */
+    #feed-container {
+      height: 100vh; width: 100vw; overflow-y: scroll;
+      scroll-snap-type: y mandatory; scroll-behavior: smooth;
+      background: #fafafa;
+    }
+    .video-post {
+      height: 100vh; width: 100vw; position: relative;
+      scroll-snap-align: start; scroll-snap-stop: always;
+    }
+    .player-container {
+      width: 390px; height: 640px; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    .video-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white; padding: 40px 30px 30px;
+    }
+    .video-info .author { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+    .video-info .title { font-size: 14px; line-height: 1.4; opacity: 0.9; }
+    .video-actions {
+      position: absolute; bottom: 30px; right: 30px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .video-actions .action-icon {
+      font-size: 28px !important; color: white !important; cursor: pointer !important;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5) !important; transition: all 0.2s !important;
+      width: 40px; height: 40px; display: flex !important; align-items: center; justify-content: center;
+    }
+    .video-actions .action-icon:hover { color: #fff !important; transform: scale(1.1); }
+    .video-actions .action-icon.liked { color: #ed4956 !important; }
+    .video-post.item-hide { opacity: 0; transform: scale(0.8); }
+    .video-post.item-focus, .video-post.item-next { opacity: 1; transform: scale(1); }
+    #feed-container iframe { border: none !important; }
+    #feed-container .ytp-chrome-top, .ytp-gradient-top, .ytp-pause-overlay { display: none !important; }
     @media (max-width: 768px) {
-      .player-container {
-        width: 100%;
-        height: 100vh;
-        position: static;
-        transform: none;
-        border-radius: 0;
-      }
+      .player-container { width: 100%; height: 100vh; position: static; transform: none; border-radius: 0; }
     }
-
-    /* Custom scrollbar */
-    #feed-container::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    #feed-container::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.2);
-      border-radius: 2px;
-    }
+    #feed-container::-webkit-scrollbar { width: 4px; }
+    #feed-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 2px; }
+    /* Dark modal */
+    .comment-modal .modal-background { background-color: rgba(10,10,10,0.85) !important; }
+    .comment-modal .box { background-color: #262626 !important; border: 1px solid #404040 !important; }
+    .comment-modal .input { background-color: #1e1e1e !important; border: 1px solid #404040 !important; color: white !important; }
+    .comment-modal .input::placeholder { color: #8e8e8e !important; }

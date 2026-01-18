@@ -1,285 +1,367 @@
-// Keep your video data structure but start with first 2
-    const videoData = [
-      {
-        id: 1,
-        videoId: 'UhVc3B-OQIs',
-        title: 'Ranking The Best Slow Motion Dogs 🐶',
-        author: 'pettastic-clip',
-        hashtags: ['funny', 'pets', 'dogs']
+import videoData from './videoData.js';
+
+const initialDiverseVideos = [
+  videoData.find(v => v.hashtags.includes('funny')),      // ID 1
+  videoData.find(v => v.hashtags.includes('art')),        // ID 11 (art, music, photography)
+  videoData.find(v => v.hashtags.includes('conspiracy')), // ID 21
+  videoData.find(v => v.hashtags.includes('health')),     // ID 29
+  videoData.find(v => v.hashtags.includes('tech')),       // ID 36
+  videoData.find(v => v.hashtags.includes('music')) || videoData.find(v => v.hashtags.includes('photography')) // Fallback ID 11/14
+].filter(Boolean);
+
+let simulationState = {
+  feed: [],
+  viewedIds: new Set(),
+  maxVideos: 20,  // Increased for longer demo
+  playerObjects: {},
+  observer: null,
+  currentIndex: 0,
+  nextVideos: [],
+  profileBuilt: false  // Track after initial 6
+};
+
+let userProfile = { engagement: {} };
+let ytReady = false;
+let isLoading = false;
+
+let prevId = null;
+
+// Replace lines 28-32 with this:
+
+function onYouTubeIframeAPIReady() {
+  ytReady = true;
+  initializeFeed();
+}
+
+// Expose to global scope for YouTube API
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+
+// Handle race condition: if YT API already loaded before this module
+if (window.YT && window.YT.Player) {
+  onYouTubeIframeAPIReady();
+}
+
+function initializeFeed() {
+  const feedContainer = document.getElementById('feed-container');
+  feedContainer.innerHTML = '';
+  // Load FIRST 6 DIVERSE videos for profiling
+  initialDiverseVideos.forEach(createPost);
+  console.log('=== PROFILING PHASE STARTED ===');
+  console.log('Initial diverse videos loaded:', initialDiverseVideos.map(v => ({title: v.title, hashtags: v.hashtags})));
+  console.log('Goal: Engage with 6 to build accurate user profile before personalization.');
+  computeNextVideos(2);
+  setupObserver();
+  setupSnapScroll();
+}
+
+function createPost(video) {
+  const feedContainer = document.getElementById('feed-container');
+  const post = document.createElement('div');
+  post.className = 'video-post';
+  post.id = `post-video-${video.id}`;
+  post.dataset.videoId = video.id;
+
+  const playerContainer = document.createElement('div');
+  playerContainer.className = 'player-container';
+  playerContainer.id = `player-video-${video.id}`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'video-overlay';
+  overlay.innerHTML = `
+    <div class="video-info">
+      <p class="author">${video.author}</p>
+      <p class="title">${video.title}</p>
+    </div>
+    <div class="video-actions">
+      <i class="far fa-heart action-icon like-button" data-action="like" data-video-id="${video.id}"></i>
+      <i class="far fa-comment action-icon" data-action="comment" data-video-id="${video.id}"></i>
+      <i class="far fa-paper-plane action-icon" data-action="share" data-video-id="${video.id}"></i>
+    </div>
+  `;
+
+  post.appendChild(playerContainer);
+  post.appendChild(overlay);
+  feedContainer.appendChild(post);
+
+  if (ytReady) {
+    const player = new YT.Player(`player-video-${video.id}`, {
+      height: '640',
+      width: '390',
+      videoId: video.videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        playsinline: 1,
+        controls: 0,           // No controls
+        fs: 0,                 // No fullscreen
+        rel: 0,                // No related videos
+        loop: 1,               // Loop the video
       },
-      {
-        id: 2,
-        videoId: '0tng6DqwT3w',
-        title: 'Ranking Dramatic Husky Moments 😂',
-        author: 'accidentalentertianment',
-        hashtags: ['funny', 'pets', 'dogs']
-      }, 
-      {
-        id: 3,
-        videoId: 'GWkswyays5M',
-        title: 'Fate of Ophelia - Taylor Swift', 
-        author: 'Taylor Swift',
-        hashtags: ['music', 'pop']
-      },
-      {
-        id: 4,
-        videoId: '3tmd-ClpJxA',
-        title: 'Dynamite - BTS',}
-      // Add more from your main.js when ready
-    ];
-
-    let simulationState = {
-      feed: [],
-      viewedIds: new Set(),
-      simulationLength: 10,
-      playerObjects: {},
-      observer: null,
-      currentIndex: 0
-    };
-
-    let userProfile = {
-      engagement: {}
-    };
-
-    let ytReady = false;
-
-    // YouTube API ready
-    function onYouTubeIframeAPIReady() {
-      console.log('YouTube API ready');
-      ytReady = true;
-      initializeFeed();
-    }
-
-    function initializeFeed() {
-      const feedContainer = document.getElementById('feed-container');
-      feedContainer.innerHTML = '';
-
-      // Always load first 2 videos
-      videoData.slice(0, 2).forEach(video => {
-        const post = createPlayer(video);
-        simulationState.feed.push(video);
-        simulationState.viewedIds.add(video.id);
-      });
-
-      setupObserver();
-      setupSnapScroll();
-    }
-
-    const threshold = 5000; // 5 second threshhold long 
-
-    function createPlayer(video) {
-      const feedContainer = document.getElementById('feed-container');
-      
-      const postElement = document.createElement('div');
-      postElement.className = 'video-post';
-      postElement.id = `post-video-${video.id}`;
-      postElement.dataset.videoId = video.id;
-
-      const playerContainer = document.createElement('div');
-      playerContainer.className = 'player-container';
-      playerContainer.id = `player-video-${video.id}`;
-
-      const overlayElement = document.createElement('div');
-      overlayElement.className = 'video-overlay';
-      overlayElement.innerHTML = `
-        <div class="video-info">
-          <h1 style='color:white;' class="author">${video.author}</h1>
-          <h2 style='color:white;' class="title">${video.title}</h2>
-        </div>
-        <div class="video-actions">
-          <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">❤️</span>
-          <span class="action-icon" data-action="comment" data-video-id="${video.id}">💬</span>
-          <span class="action-icon" data-action="share" data-video-id="${video.id}">📤</span>
-        </div>
-      `;
-
-      postElement.appendChild(playerContainer);
-      postElement.appendChild(overlayElement);
-      feedContainer.appendChild(postElement);
-
-      // Create YouTube player
-      if (ytReady) {
-        const player = new YT.Player(`player-video-${video.id}`, {
-          height: '640',
-          width: '390',
-          videoId: video.videoId,
-          playerVars: {
-            autoplay: 1,
-            mute: 1,  // REQUIRED for autoplay to work reliably
-            playsinline: 1,
-            controls: 0,
-            fs: 0,     // disable fullscreen
-            rel: 0,
-            color: 'white',
-            showinfo: 0,  // hide title/uploader
-            iv_load_policy: 3  // hide annotations
-          },
-          events: {
-            onReady: (event) => {
-              event.target.playVideo();
-            }
+      events: {
+                'onReady': (e) => {
+          e.target.mute();
+          simulationState.playerObjects[video.id] = e.target;
+          simulationState.feed.push(video);
+          simulationState.viewedIds.add(video.id);
+          
+          // Play if this video is at the current index (first visible)
+          const myIndex = simulationState.feed.length - 1;
+          if (myIndex === simulationState.currentIndex) {
+            e.target.playVideo();
+            console.log(`▶️ Auto-playing: ${video.title}`);
           }
-        });
-
-        simulationState.playerObjects[video.id] = player;
-      }
-
-      // Event listeners for actions
-      overlayElement.querySelectorAll('.action-icon').forEach(icon => {
-        icon.addEventListener('click', handleFeedClick);
-      });
-
-      // Update focus classes
-      updateFocusClasses();
-
-      return postElement;
-    }
-
-    function setupObserver() {
-        const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-        const post = entry.target;
-        const videoId = parseInt(post.dataset.videoId);
-        const player = simulationState.playerObjects[videoId];
-        const video = videoData.find(v => v.id === videoId);
-      
-      if (entry.isIntersecting && player) {
-        player.playVideo();
-        // Start 8s long view timer
-        const longViewTimer = setTimeout(() => {
-          trackEngagement(video, 'longView');
-          console.log('Long view 8s+:', video.title);
-        }, 8000); // 8 seconds
-        
-        player.longViewTimer = longViewTimer; // Store to clear later
-      } else if (player) {
-        player.pauseVideo();
-        // Clear timer if not viewed 8s
-        if (player.longViewTimer) {
-          clearTimeout(player.longViewTimer);
-          player.longViewTimer = null;
+          console.log(`Player ready: ${video.title}`);
+        },
+        'onStateChange': (e) => {
+          if (e.data === YT.PlayerState.ENDED) {
+            e.target.playVideo();  // Force restart/loop
+            console.log(`Restarted: ${video.title} (no end screen)`);
+          }
         }
       }
     });
-  }, { threshold: 0.6 }); // Higher threshold for "real" view
+  }
 
-  simulationState.observer = observer;
-  document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
+  overlay.querySelectorAll('.action-icon').forEach(icon => {
+    icon.addEventListener('click', handleFeedClick);
+  });
+  updateFocusClasses();
+  simulationState.observer?.observe(post);
+  return post;
+}
+
+function computeNextVideos(num = 2) {
+  simulationState.nextVideos = [];
+  for (let i = 0; i < num; i++) {
+    const next = getNextVideo();
+    if (next) simulationState.nextVideos.push(next);
+  }
+  console.log('🔮 Precomputed next 2:', simulationState.nextVideos.map(v => `${v.title} (${v.hashtags.join(',')})`));
+}
+
+function preloadNextVideos() {
+  if (isLoading || simulationState.feed.length >= simulationState.maxVideos) return;
+  isLoading = true;
+  simulationState.nextVideos.slice(0, 2).forEach(video => {
+    if (!simulationState.viewedIds.has(video.id)) createPost(video);
+  });
+  computeNextVideos(2);
+  isLoading = false;
+}
+
+function getNextVideo() {
+  if (simulationState.feed.length >= simulationState.maxVideos) return null;
+  const unseen = videoData.filter(v => !simulationState.viewedIds.has(v.id));
+  if (unseen.length === 0) return null;
+
+  const totalEngagement = Object.values(userProfile.engagement).reduce((a, b) => a + b, 0);
+  console.log(`📊 Current profile:`, userProfile.engagement, `Total score: ${totalEngagement}`);
+
+  if (!simulationState.profileBuilt || totalEngagement < 10) {  // Delay personalization until ~6 views + some engagement
+    simulationState.profileBuilt = simulationState.feed.length >= 6;
+    console.log(simulationState.profileBuilt ? '✅ Profile built - now personalizing!' : '⏳ Still profiling...');
+    return unseen[Math.floor(Math.random() * unseen.length)];
+  }
+
+  let candidates = [];
+  const topTags = Object.entries(userProfile.engagement)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 3)
+    .map(([tag]) => tag);
+
+  topTags.forEach(tag => {
+    unseen.forEach(video => {
+      if (video.hashtags.includes(tag)) {
+        candidates.push({ video, score: userProfile.engagement[tag] });
+      }
+    });
+  });
+
+  for (let i = 0; i < Math.floor(unseen.length * 0.3); i++) {
+    const randomVideo = unseen[Math.floor(Math.random() * unseen.length)];
+    candidates.push({ video: randomVideo, score: 1 });
+  }
+
+  const rand = Math.random() * 1.5;
+  const pick = candidates[Math.floor(rand * candidates.length)];
+  console.log(`🎯 Selected "${pick?.video.title}" (score: ${pick?.score}) | Top tags: [${topTags.join(', ')}]`);
+  return pick?.video;
+}
+
+// Rest of functions unchanged: setupObserver, setupSnapScroll, updateFocusClasses, handleFeedClick, trackEngagement (enhanced log), handleCommentClick, handleShareClick
+
+function setupObserver() {
+  const observerOptions = {
+    root: document.getElementById('feed-container'),
+    threshold: 0.5
+  };
+  simulationState.observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const index = simulationState.feed.findIndex(v => `post-video-${v.id}` === entry.target.id);
+      if (entry.isIntersecting && index === simulationState.currentIndex) {
+        const player = simulationState.playerObjects[simulationState.feed[index].id];
+        if (player) {
+          player.playVideo();
+          console.log(`▶️ Playing: ${simulationState.feed[index].title} (${simulationState.feed[index].hashtags.join(', ')})`);
+        }
+        Object.values(simulationState.playerObjects).forEach((p, idx) => {
+          if (idx !== index) p.pauseVideo();
+        });
+        setTimeout(() => trackEngagement(simulationState.feed[index], 'longView'), 3000);
+      }
+    });
+  }, observerOptions);
+}
+function deletePlayer(videoId) {
+  // Destroy the YT player instance first (frees memory)
+  const player = simulationState.playerObjects[videoId];
+  if (player) {
+    player.destroy();
+    delete simulationState.playerObjects[videoId];
+    console.log(`🗑️ Destroyed YT player for video ID: ${videoId}`);
+  }
+  
+  // DON'T remove the DOM element - just clear the iframe to keep indexes aligned
+  // The .item-hide class already hides it visually
+  const playerContainer = document.getElementById(`player-video-${videoId}`);
+  if (playerContainer) {
+    playerContainer.innerHTML = ''; // Clear iframe but keep the container
+    console.log(`🗑️ Cleared player container for video ID: ${videoId}`);
+  }
+}
+
+// Expose to global scope for YouTube API callback
+window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+// Update setupSnapScroll:
+function setupSnapScroll() {
+  const feedContainer = document.getElementById('feed-container');
+  let scrollTimeout;
+  let lastValidIndex = 0;
+
+  // Block arrow up key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      console.log('⛔ Arrow Up blocked!');
+    }
+  });
+
+  feedContainer.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const scrollTop = feedContainer.scrollTop;
+      const newIndex = Math.round(scrollTop / window.innerHeight);
+      const previousIndex = simulationState.currentIndex;
+      
+      // Block scrolling up - snap back
+      if (newIndex < previousIndex) {
+        feedContainer.scrollTo({
+          top: previousIndex * window.innerHeight,
+          behavior: 'smooth'
+        });
+        console.log('⛔ Upward scroll blocked!');
+        return;
+      }
+      
+      simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+      
+      // Delete the video DIRECTLY above when scrolling forward
+      if (simulationState.currentIndex > previousIndex && simulationState.currentIndex >= 1) {
+        const indexToDelete = simulationState.currentIndex - 1;
+        const videoToDelete = simulationState.feed[indexToDelete];
+        
+        if (videoToDelete) {
+          deletePlayer(videoToDelete.id);
+          
+          // Special case: first deletion
+          if (simulationState.currentIndex === 1) {
+            console.log('📍 First video (index 0) deleted!');
+          }
+        }
+      }
+      
+      if (simulationState.currentIndex + 3 >= simulationState.feed.length) {
+        preloadNextVideos();
+      }
+      updateFocusClasses();
+    }, 100);
+  }, { passive: true });
+}
+
+function updateFocusClasses() {
+  document.querySelectorAll('.video-post').forEach((post, idx) => {
+    post.classList.remove('item-focus', 'item-next', 'item-hide');
+    if (idx < simulationState.currentIndex) post.classList.add('item-hide');
+    else if (idx === simulationState.currentIndex) post.classList.add('item-focus');
+    else if (idx === simulationState.currentIndex + 1) post.classList.add('item-next');
+  });
+}
+
+function handleFeedClick(e) {
+  const target = e.target;
+  if (!target.classList.contains('action-icon')) return;
+  const action = target.dataset.action;
+  const videoId = parseInt(target.dataset.videoId);
+  const video = videoData.find(v => v.id === videoId);
+
+  switch (action) {
+    case 'like':
+      target.classList.toggle('liked');
+      if (target.classList.contains('liked')) target.classList.replace('far', 'fas');
+      else target.classList.replace('fas', 'far');
+      trackEngagement(video, 'like');
+      preloadNextVideos();
+      break;
+    case 'comment':
+      handleCommentClick(videoId);
+      trackEngagement(video, 'comment');
+      preloadNextVideos();
+      break;
+    case 'share':
+      handleShareClick(videoId);
+      trackEngagement(video, 'share');
+      preloadNextVideos();
+      break;
+  }
+}
+
+function trackEngagement(video, type) {
+  const weights = { like: 3, comment: 5, share: 4, longView: 2 };
+  const weight = (weights[type] || 1);
+  const before = { ...userProfile.engagement };
+  video.hashtags.forEach(tag => {
+    userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
+  });
+  console.log(`💥 ${type.toUpperCase()} on "${video.title}" (+${weight} pts)`);
+  console.log('Before:', before);
+  console.log('After:', userProfile.engagement);
+  console.log('---');
+}
+
+function handleCommentClick(videoId) {
+  const modalContainer = document.getElementById('modal-container');
+  modalContainer.innerHTML = `
+    <div class="modal is-active comment-modal">
+      <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+      <div class="modal-content" style="max-width: 400px;">
+        <div class="box">
+          <div style="padding:20px; background: #262626; color: white; border-radius: 12px;">
+            <h3 style="margin-bottom:16px;">Comments</h3>
+            <p style="color: #8e8e8e;">No comments yet...</p>
+            <input class="input mt-3" type="text" placeholder="Add a comment..." style="background: #1e1e1e; color: white; border: 1px solid #404040;">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function handleShareClick(videoId) {
+  const video = videoData.find(v => v.id === videoId);
+  console.log('📱 Shared', video.title);
 }
 
 
-    function setupSnapScroll() {
-      const feedContainer = document.getElementById('feed-container');
-      let scrollTimeout;
 
-      feedContainer.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const scrollTop = feedContainer.scrollTop;
-          const newIndex = Math.round(scrollTop / window.innerHeight);
-          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
-          updateFocusClasses();
-        }, 100);
-      });
 
-      // Keyboard navigation
-      document.addEventListener('keydown', (e) => {
-        const feedContainer = document.getElementById('feed-container');
-        if (e.key === 'ArrowDown' || e.key === ' ') {
-          e.preventDefault();
-          if (simulationState.currentIndex < simulationState.feed.length - 1) {
-            simulationState.currentIndex++;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (simulationState.currentIndex > 0) {
-            simulationState.currentIndex--;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        }
-      });
-    }
 
-    function loadNextVideo() {
-      const unseenVideos = videoData.filter(v => !simulationState.viewedIds.has(v.id));
-      if (unseenVideos.length === 0) return;
-
-      const nextVideo = unseenVideos[Math.floor(Math.random() * unseenVideos.length)];
-      createPlayer(nextVideo);
-      simulationState.feed.push(nextVideo);
-      simulationState.viewedIds.add(nextVideo.id);
-    }
-
-    function updateFocusClasses() {
-      document.querySelectorAll('.video-post').forEach((post, index) => {
-        post.classList.remove('item-focus', 'item-next', 'item-hide');
-        if (index < simulationState.currentIndex) {
-          post.classList.add('item-hide');
-        } else if (index === simulationState.currentIndex) {
-          post.classList.add('item-focus');
-        } else if (index === simulationState.currentIndex + 1) {
-          post.classList.add('item-next');
-        }
-      });
-    }
-
-    function handleFeedClick(event) {
-      const target = event.target;
-      if (!target.classList.contains('action-icon')) return;
-
-      const action = target.dataset.action;
-      const videoId = parseInt(target.dataset.videoId);
-
-      switch (action) {
-        case 'like':
-          target.classList.toggle('liked');
-          trackEngagement(videoData.find(v => v.id === videoId), 'like');
-          break;
-        case 'comment':
-          handleCommentClick(videoId);
-          break;
-        case 'share':
-          handleShareClick(videoId);
-          break;
-      }
-    }
-
-    function trackEngagement(video, type) {
-      const weights = { like: 2, comment: 3, share: 4, longView: 1 };
-      const weight = weights[type] || 1;
-      
-      video.hashtags.forEach(tag => {
-        userProfile.engagement[tag] = (userProfile.engagement[tag] || 0) + weight;
-      });
-    }
-
-    function handleCommentClick(videoId) {
-      const video = videoData.find(v => v.id === videoId);
-      const modalContainer = document.getElementById('modal-container');
-      modalContainer.innerHTML = `
-        <div class="modal is-active">
-          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
-          <div class="modal-content">
-            <div class="box has-background-black has-text-white">
-              <h3 class="title is-4 has-text-white">Comments</h3>
-              <p>No comments yet...</p>
-            </div>
-          </div>
-          <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
-        </div>
-      `;
-      trackEngagement(video, 'comment');
-    }
-
-    function handleShareClick(videoId) {
-      const video = videoData.find(v => v.id === videoId);
-      trackEngagement(video, 'share');
-      console.log('Shared:', video.title);
-    }

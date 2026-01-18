@@ -374,6 +374,8 @@ let userProfile = { engagement: {} };
 let ytReady = false;
 let isLoading = false;
 
+let prevId = null;
+
 function onYouTubeIframeAPIReady() {
   ytReady = true;
   initializeFeed();
@@ -433,11 +435,7 @@ function createPost(video) {
         controls: 0,           // No controls
         fs: 0,                 // No fullscreen
         rel: 0,                // No related videos
-        modestbranding: 2,     // Hide logo completely
-        showinfo: 0,
-        iv_load_policy: 3,     // No annotations
         loop: 1,               // Loop the video
-        playlist: video.videoId  // Loop same video (prevents end screen)
       },
       events: {
         'onReady': (e) => {
@@ -464,6 +462,23 @@ function createPost(video) {
   updateFocusClasses();
   simulationState.observer?.observe(post);
   return post;
+}
+
+function deletePlayer(videoId) {
+  // Destroy the YT player instance first (frees memory)
+  const player = simulationState.playerObjects[videoId];
+  if (player) {
+    player.destroy();
+    delete simulationState.playerObjects[videoId];
+    console.log(`🗑️ Destroyed YT player for video ID: ${videoId}`);
+  }
+  
+  // Then remove the DOM element
+  const postElement = document.getElementById(`post-video-${videoId}`);
+  if (postElement) {
+    postElement.remove();
+    console.log(`🗑️ Removed DOM element for video ID: ${videoId}`);
+  }
 }
 
 function computeNextVideos(num = 2) {
@@ -549,20 +564,76 @@ function setupObserver() {
   }, observerOptions);
 }
 
+function deletePlayer(videoId) {
+  // Destroy the YT player instance first (frees memory)
+  const player = simulationState.playerObjects[videoId];
+  if (player) {
+    player.destroy();
+    delete simulationState.playerObjects[videoId];
+    console.log(`🗑️ Destroyed YT player for video ID: ${videoId}`);
+  }
+  
+  // DON'T remove the DOM element - just clear it to keep indexes aligned
+  // The .item-hide class already hides it visually
+  const playerContainer = document.getElementById(`player-video-${videoId}`);
+  if (playerContainer) {
+    playerContainer.innerHTML = ''; // Clear iframe but keep the container
+    console.log(`🗑️ Cleared player container for video ID: ${videoId}`);
+  }
+}
+// Update setupSnapScroll:
 function setupSnapScroll() {
   const feedContainer = document.getElementById('feed-container');
   let scrollTimeout;
+  let lastValidIndex = 0;
+
+  // Block arrow up key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      console.log('⛔ Arrow Up blocked!');
+    }
+  });
+
   feedContainer.addEventListener('scroll', () => {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const scrollTop = feedContainer.scrollTop;
       const newIndex = Math.round(scrollTop / window.innerHeight);
+      const previousIndex = simulationState.currentIndex;
+      
+      // Block scrolling up - snap back
+      if (newIndex < previousIndex) {
+        feedContainer.scrollTo({
+          top: previousIndex * window.innerHeight,
+          behavior: 'smooth'
+        });
+        console.log('⛔ Upward scroll blocked!');
+        return;
+      }
+      
       simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+      
+      // Delete the video DIRECTLY above when scrolling forward
+      if (simulationState.currentIndex > previousIndex && simulationState.currentIndex >= 1) {
+        const indexToDelete = simulationState.currentIndex - 1;
+        const videoToDelete = simulationState.feed[indexToDelete];
+        
+        if (videoToDelete) {
+          deletePlayer(videoToDelete.id);
+          
+          // Special case: first deletion
+          if (simulationState.currentIndex === 1) {
+            console.log('📍 First video (index 0) deleted!');
+          }
+        }
+      }
+      
       if (simulationState.currentIndex + 3 >= simulationState.feed.length) {
         preloadNextVideos();
       }
       updateFocusClasses();
-    }, 100, { passive: true });
+    }, 100);
   }, { passive: true });
 }
 
