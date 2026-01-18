@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Scroll Wrapped</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">Your Scroll, Wrapped</h1>
+      <p class="subtitle">Here's how your feed evolved.</p>
+
+      <div id="wrapped-content">
+        <!-- Wrapped summary will be dynamically inserted here -->
+        <div class="box">
+          <h2 class="title is-4">Your Dominant Bias</h2>
+          <p id="dominant-bias">TODO: Calculate and display the dominant bias (e.g., Confirmation Bias).</p>
+        </div>
+
+        <div class="box">
+          <h2 class="title is-4">Your Top Hashtags</h2>
+          <div id="top-hashtags">
+            <!-- TODO: Display top engaged hashtags -->
+          </div>
+        </div>
+
+        <div class="box">
+            <h2 class="title is-4">Feed Snapshots</h2>
+            <p>Notice how the content changed from your first scroll to your last.</p>
+            <div class="columns">
+                <div class="column">
+                    <h3 class="title is-6">1st Video</h3>
+                    <div id="snapshot-1">
+                        <!-- TODO: Show a thumbnail or title of the first video -->
+                    </div>
+                </div>
+                <div class="column">
+                    <h3 class="title is-6">5th Video</h3>
+                    <div id="snapshot-5">
+                        <!-- TODO: Show a thumbnail or title of the 5th video -->
+                    </div>
+                </div>
+                <div class="column">
+                    <h3 class="title is-6">10th Video</h3>
+                    <div id="snapshot-10">
+                        <!-- TODO: Show a thumbnail or title of the 10th video -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script src="js/wrapped.js"></script>
+</body>
+</html>

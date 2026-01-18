@@ -158,16 +158,7 @@ function createPost(video) {
             e.target.playVideo();  // Force restart/loop
             console.log(`Restarted: ${video.title} (no end screen)`);
           }
-        },
-        'onStateChange': (e) => {
-  // Track when video completes naturally (before loop restarts)
-  if (e.data === YT.PlayerState.ENDED) {
-    console.log(`✅ COMPLETED: ${video.title}`);
-    trackEngagement(video, 'completedView');
-    e.target.playVideo();  // Force restart/loop
-    console.log(`Restarted: ${video.title} (no end screen)`);
-  }
-}
+        }
       }
     });
   }
@@ -243,16 +234,7 @@ function computeNextVideos(num = 2) {
 }
 
 function preloadNextVideos() {
-  if (isLoading || simulationState.feed.length >= simulationState.maxVideos) {
-    // ✅ ADD THIS: Save when we hit max videos
-    if (simulationState.feed.length >= simulationState.maxVideos) {
-      console.log('🎉 SIMULATION COMPLETE!');
-      console.log('Final profile:', userProfile);
-      localStorage.setItem('userProfile', JSON.stringify(userProfile));
-      console.log('💾 Saved complete profile to localStorage');
-    }
-    return;
-  }
+  if (isLoading || simulationState.feed.length >= simulationState.maxVideos) return;
   isLoading = true;
   simulationState.nextVideos.slice(0, 2).forEach(video => {
     if (!simulationState.viewedIds.has(video.id)) createPost(video);
@@ -376,15 +358,6 @@ function setupSnapScroll() {
       }
       
       simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
-
-    // Save when reaching the last video
-    if (simulationState.currentIndex === simulationState.feed.length - 1 && 
-        simulationState.feed.length >= simulationState.maxVideos) {
-        console.log('🎉 REACHED END OF SIMULATION!');
-        console.log('Final profile:', userProfile);
-        localStorage.setItem('userProfile', JSON.stringify(userProfile));
-        console.log('💾 Saved complete profile to localStorage');
-    }
       
       // Delete the video DIRECTLY above when scrolling forward
       if (simulationState.currentIndex > previousIndex && previousIndex >= 0) {
@@ -562,7 +535,7 @@ function setupSnapScroll() {
 }
 
 function trackEngagement(video, type) {
-  const weights = { like: 3, comment: 4, share: 3, longView: 2, completedView: 7};
+  const weights = { like: 3, comment: 5, share: 4, longView: 2 };
   const weight = (weights[type] || 1);
   const before = { ...userProfile.engagement };
   video.hashtags.forEach(tag => {
