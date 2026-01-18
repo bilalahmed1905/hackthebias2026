@@ -1,41 +1,96 @@
-# Algorithmic Bias Simulator - Implementation Plan
+# Scroll The Bias
 
-This document outlines the high-level implementation plan for creating a "doom scroll" simulation to bring awareness to systemic and cognitive biases present in social media algorithms.
+**An interactive social media simulator that reveals how algorithmic bias shapes what you see.**
 
-## 1. Project Overview
+🔗 **[Try it live](https://scrollthebias.netlify.app)**
 
-The goal of this project is to create an interactive web application that simulates a social media feed. Users will scroll through content, and their engagement (likes, time spent on a video) will dynamically alter the feed to demonstrate how algorithms can create filter bubbles and reinforce biases like confirmation bias, anchoring bias, and systemic bias. At the end of the simulation, users will be presented with a personalized "Wrapped" summary of their scrolling behavior and its impact.
+## What is this?
 
-## 2. Core Features
+Scroll The Bias is an educational web experience that simulates a social media feed to demonstrate how recommendation algorithms can create filter bubbles and reinforce cognitive biases. By tracking your engagement (likes, watch time), the simulator gradually personalizes your feed—showing you firsthand how your online behavior shapes the content you see.
+
+At the end of the simulation, you'll receive a personalized "Wrapped" summary revealing how algorithmic bias quietly influenced your scrolling journey.
+
+> **Note:** We're not judging your taste or preferences—we're simply opening your eyes to the invisible mechanisms that shape your digital experience.
+
+## Why does this matter?
+
+Social media algorithms are designed to maximize engagement by showing you content similar to what you've already interacted with. While this can feel convenient, it creates **filter bubbles** that:
+- Reinforce existing beliefs (confirmation bias)
+- Limit exposure to diverse perspectives
+- Can gradually lead users toward more extreme or niche content
+- Operate invisibly, without users realizing their feed is being personalized
+
+This project makes those invisible forces visible.
+
+## Features
 
 1.  **Fake Social Media Feed:** A vertically scrolling feed of video content that mimics popular social media platforms.
 2.  **Engagement Tracking:** The application will track user interactions, such as "liking" a post and how long they watch each video.
 3.  **Dynamic Content "Algorithm":** A simple, rule-based algorithm that adjusts the content shown to the user based on their engagement. The algorithm will favor content with hashtags similar to the content the user has engaged with most.
 4.  **Scrolling "Wrapped" Summary:** A final summary page that visualizes the user's scrolling journey, highlighting how their feed changed over time and explaining the biases that were reinforced.
 
-## 3. Technical Stack
+## Tech Stack
 
--   **HTML:** For the structure of the web pages.
--   **CSS:** For styling the feed, videos, and the wrapped summary to look like a modern social media app.
--   **JavaScript (JS):** For all the client-side logic, including engagement tracking, the content algorithm, and dynamically updating the feed.
--   **jQuery (Optional):** Can be used for simplifying DOM manipulation and creating smooth animations/transitions between videos.
+- **Frontend:** Vanilla JavaScript (ES6+), HTML5, CSS3
+- **Video Embedding:** YouTube IFrame Player API
+- **Data Persistence:** localStorage
+- **Styling:** Bulma CSS framework + custom CSS
+- **Hosting:** Netlify
 
-## 4. Page Structure
+## Project Structure
 
-We will use two main HTML pages. While a single-page application is possible, a two-page approach is recommended for this project to keep the code simple, organized, and focused. It separates the logic of the simulation from the logic of the results, which is a cleaner approach for a time-constrained project.
+```
+hackthebias2026/
+├── index.html          # Main simulation feed
+├── wrap.html           # "Wrapped" results page
+├── css/
+│   ├── style.css       # Feed styling
+│   └── wrapper.css     # Wrapped page styling
+├── js/
+│   ├── main.js         # Core algorithm & engagement tracking
+│   └── videoData.js    # Curated video dataset
+└── videos/             # Video thumbnails/assets
+```
 
-1.  **`index.html` (The Feed):**
-    -   This will be the main page for the scrolling simulation.
-    -   It will contain the video feed.
-    -   It will handle all the engagement tracking logic.
-    -   When the simulation is over, it will redirect the user to the `wrapped.html` page, passing the collected data.
+---
 
-2.  **`wrapped.html` (The Summary):**
-    -   This page will display the results of the user's session.
-    -   It will receive data from `index.html` (e.g., via `localStorage`).
-    -   It will feature visualizations and explanations of the biases demonstrated during the scroll.
+## Technical Implementation
 
-## 5. Implementation Steps
+<details>
+<summary><strong>How the Algorithm Works</strong></summary>
+
+### Phase 1: Profiling (First ~6 videos)
+- Shows diverse content across all topics
+- **100% random selection** to build an accurate user profile
+- Tracks engagement: likes (+3 pts), comments (+4 pts), shares (+3 pts), long views (+2 pts), completed views (+7 pts)
+
+### Phase 2: Personalization (After 6+ videos)
+- Identifies your top 3 most-engaged hashtags
+- Creates a candidate pool:
+  - **70% weight:** Videos matching your interests
+  - **30% weight:** Random exploration videos
+- Uses weighted random selection to pick the next video
+
+**Example:** If you engage heavily with `#tech` (15 points), tech videos are 15x more likely to appear than random content.
+
+</details>
+
+<details>
+<summary><strong>Video Content Strategy</strong></summary>
+
+We use a curated list of **pre-selected YouTube video IDs** embedded via the YouTube IFrame Player API:
+- ✅ No API key required
+- ✅ Total control over content diversity
+- ✅ Professional video player experience
+- ✅ Reliable (no API quota issues)
+
+Each video is tagged with hashtags (`#tech`, `#conspiracy`, `#health`, etc.) that power the recommendation algorithm.
+
+</details>
+
+---
+
+## Implementation Details
 
 ### Phase 1: Setup and Feed Creation
 
@@ -117,8 +172,52 @@ We will use two main HTML pages. While a single-page application is possible, a 
     -   Dynamically populate the `wrapped.html` page with the user's specific data.
     -   Use a simple charting library (like Chart.js) or just CSS to create visualizations of their engagement data.
 
-## 6. Bias Demonstration Plan
-- EMPHASIZE WE ARE NOT JUDGING THE USERS TASTE BUT SIMPLY OPENING THEIR EYES TO THE HABITS
--   **Confirmation & Anchoring Bias:** The core algorithm simulation will demonstrate this naturally. As a user engages with a topic, they will be fed more of it, confirming their initial "choice" and anchoring them to that perspective. The "Wrapped" page will explicitly state this.
--   **Systemic Bias:** This can be shown by having the initial pool of videos slightly favor certain topics, showing how the platform itself can have a built-in bias even before user engagement.
--   **Positive vs. Negative Loop:** The video content should be a mix of positive/uplifting content and more negative/divisive content. The "Wrapped" summary can show which path the user went down, illustrating that the same mechanisms can create both positive and negative feedback loops.
+## Demonstrated Biases
+
+### Confirmation Bias
+As you engage with content, the algorithm feeds you more of the same, confirming and reinforcing your initial interests—creating an echo chamber.
+
+### Anchoring Bias
+Your early interactions disproportionately influence what you see later, anchoring your entire feed to those first choices.
+
+### Systemic Bias
+Even the initial "diverse" feed has built-in biases based on which videos are included in the platform's content pool.
+
+### Filter Bubble Effect
+The gradual narrowing of content diversity as personalization increases, limiting exposure to alternative viewpoints.
+
+---
+
+## Local Development
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd hackthebias2026
+
+# Open with a local server (required for ES6 modules)
+# Option 1: Python
+python -m http.server 8000
+
+# Option 2: Node.js
+npx http-server
+
+# Option 3: VS Code Live Server extension
+# Right-click index.html → "Open with Live Server"
+
+# Navigate to localhost:8000
+```
+
+---
+
+## Credits
+
+Built for **Hack the Bias 2026** to raise awareness about algorithmic bias in social media.
+
+**Disclaimer:** This is an educational simulation. No real user data is collected or stored beyond your browser's localStorage during the simulation session.
+
+---
+
+## License
+
+MIT License - Feel free to use this project for educational purposes.
