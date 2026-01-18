@@ -19,7 +19,38 @@ let simulationState = {
   profileBuilt: false  // Track after initial 6
 };
 
-let userProfile = { engagement: {} }; // tech: 5, music 3
+const commentData = [
+      {
+        topic: 'funny',
+        comments: [
+          'This made my day! 😂',
+          'I can\'t stop laughing! 🤣',
+          'Best video ever! 😆',
+          'hilarious',
+          'this is crazy']
+      },
+      {
+        topic: 'pets',
+        comments: [
+          'So cute! 🥰',
+          'I want',
+          'Adorable!',
+          'Love this!',
+          'precious']
+      },
+      {
+        topic: 'news',
+        comments: [
+          'Very informative.',
+          'Thanks for sharing this.',
+          'Eye-opening content.',
+          'important info',
+          'must watch']
+      }
+
+    ];
+
+let userProfile = { engagement: {} };
 let ytReady = false;
 let isLoading = false;
 
@@ -81,6 +112,16 @@ function createPost(video) {
     </div>
   `;
 
+  // const heartIcon = document.getElementById('heart-icon');
+  //     heartIcon.onclick = function() {
+  //       this.classList.add('.liked');
+  //       if (this.classList.contains('liked')) {
+  //         this.classList.replace('fa-regular', 'fa-solid');
+  //       } else {
+  //         this.classList.replace('fa-solid', 'fa-regular');
+  //       }
+  //     } 
+
   post.appendChild(playerContainer);
   post.appendChild(overlay);
   feedContainer.appendChild(post);
@@ -98,7 +139,8 @@ function createPost(video) {
         fs: 0,                 // No fullscreen
         rel: 0,                // No related videos
         loop: 1,               // Loop the video
-      },
+        modestbranding:1
+      },  
       events: {
                 'onReady': (e) => {
           e.target.mute();
@@ -129,14 +171,67 @@ function createPost(video) {
       }
     });
   }
-
   overlay.querySelectorAll('.action-icon').forEach(icon => {
-    icon.addEventListener('click', handleFeedClick);
+  icon.addEventListener('click', handleFeedClick);
   });
   updateFocusClasses();
   simulationState.observer?.observe(post);
   return post;
 }
+
+
+  function createPlayer(video) {
+    const feedContainer = document.getElementById('feed-container');
+    
+    const postElement = document.createElement('div');
+    postElement.className = 'video-post';
+    postElement.id = `post-video-${video.id}`;
+    postElement.dataset.videoId = video.id;
+
+    const playerContainer = document.createElement('div');
+    playerContainer.className = 'player-container';
+    playerContainer.id = `player-video-${video.id}`;
+
+    const overlayElement = document.createElement('div');
+    overlayElement.className = 'video-overlay';
+    overlayElement.innerHTML = `
+        <div class="video-info">
+          <h2 class="author">${video.author}</h2>
+          <h2 class="title">${video.title}</h2>
+        </div>
+        <div class="video-actions">
+           <span class="action-icon" data-video-id="${video.id}">
+            <i class="far fa-comment" onClick="handleCommentClick(${video.id})"></i>
+           </span>
+           <span class="action-icon" id="heart-icon" data-video-id="${video.id}">
+            <i class="far fa-heart" onClick="handleLikeClick(document.getElementById('heart-icon'))"></i>
+           </span>
+           <span class="action-icon" data-action="share" data-video-id="${video.id}">
+            <i class="far fa-paper-plane"></i>
+           </span>
+
+        </div>
+      `;
+
+    postElement.appendChild(playerContainer);
+    postElement.appendChild(overlayElement);
+    feedContainer.appendChild(postElement);
+
+    const heartIcon = document.getElementById('heart-icon');
+    heartIcon.onclick = function() {
+      this.classList.add('.liked');
+      if (this.classList.contains('liked')) {
+        this.classList.replace('fa-regular', 'fa-solid');
+      } else {
+        this.classList.replace('fa-solid', 'fa-regular');
+      }
+    }   
+
+    // Create YouTube player
+    
+
+
+
 
 function computeNextVideos(num = 2) {
   simulationState.nextVideos = [];
@@ -311,22 +406,140 @@ function setupSnapScroll() {
   }, { passive: true });
 }
 
-function updateFocusClasses() {
-  document.querySelectorAll('.video-post').forEach((post, idx) => {
-    post.classList.remove('item-focus', 'item-next', 'item-hide');
-    if (idx < simulationState.currentIndex) post.classList.add('item-hide');
-    else if (idx === simulationState.currentIndex) post.classList.add('item-focus');
-    else if (idx === simulationState.currentIndex + 1) post.classList.add('item-next');
-  });
-}
+      return postElement;
+    }
+    
 
-function handleFeedClick(e) {
-  const target = e.target;
-  if (!target.classList.contains('action-icon')) return;
-  const action = target.dataset.action;
-  const videoId = parseInt(target.dataset.videoId);
-  const video = videoData.find(v => v.id === videoId);
+// function handleFeedClick(e) {
+//   const target = e.target;
+//   if (!target.classList.contains('action-icon')) return;
+//   const action = target.dataset.action;
+//   const videoId = parseInt(target.dataset.videoId);
+//   const video = videoData.find(v => v.id === videoId);
 
+//           if (entry.isIntersecting && player) {
+//             player.playVideo();
+//           } else if (player) {
+//             player.pauseVideo();
+//           }
+//         });
+//       }, { threshold: 0.5 });
+
+//       simulationState.observer = observer;
+//       document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
+//     }
+      
+
+    function setupSnapScroll() {
+      const feedContainer = document.getElementById('feed-container');
+      let scrollTimeout;
+
+      feedContainer.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollTop = feedContainer.scrollTop;
+          const newIndex = Math.round(scrollTop / window.innerHeight);
+          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
+          updateFocusClasses();
+        }, 100);
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        const feedContainer = document.getElementById('feed-container');
+        if (e.key === 'ArrowDown' || e.key === ' ') {
+          e.preventDefault();
+          if (simulationState.currentIndex < simulationState.feed.length - 1) {
+            simulationState.currentIndex++;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (simulationState.currentIndex > 0) {
+            simulationState.currentIndex--;
+            feedContainer.scrollTo({
+              top: simulationState.currentIndex * window.innerHeight,
+              behavior: 'smooth'
+            });
+          }
+        }
+      });
+    }
+
+    function updateFocusClasses() {
+      document.querySelectorAll('.video-post').forEach((post, index) => {
+        post.classList.remove('item-focus', 'item-next', 'item-hide');
+        if (index < simulationState.currentIndex) {
+          post.classList.add('item-hide');
+        } else if (index === simulationState.currentIndex) {
+          post.classList.add('item-focus');
+        } else if (index === simulationState.currentIndex + 1) {
+          post.classList.add('item-next');
+        }
+      });
+    }
+
+    function handleFeedClick(event) {
+      const target = event.target;
+      if (!target.classList.contains('action-icon')) return;
+
+      const action = target.dataset.action;
+      const videoId = parseInt(target.dataset.videoId);
+
+      switch (action) {
+        case 'like':
+          const heartIcon = target;
+          heartIcon.classList.toggle('liked');
+          heartIcon.classList.toggle('fas');     // filled heart
+          heartIcon.classList.toggle('far');     // outline heart
+          trackEngagement(videoData.find(v => v.id === videoId), 'like');
+          break;
+  
+        case 'comment':
+          handleCommentClick(videoId);
+          break;
+        case 'share':
+          handleShareClick(videoId);
+          break;
+      }
+    }
+
+    
+
+    function handleLikeClick(element) {
+  // 'element' refers to the icon that was clicked
+      element.classList.toggle('liked');
+      const heartIcon = element.querySelector('i');
+      
+      if (element.classList.contains('liked')) {
+        heartIcon.classList.replace('far', 'fas');
+      } else {
+        heartIcon.classList.replace('fas', 'far');
+      }
+      trackEngagement(videoData.find(v => v.id === videoId), 'like');
+    }
+  
+    
+    function handleCommentClick1(videoId) {
+      const video = videoData.find(v => v.id === videoId);
+      const modalContainer = document.getElementById('modal-container');
+      modalContainer.innerHTML = `
+        <div class="modal is-active">
+          <div class="modal-background" onclick="document.getElementById('modal-container').innerHTML=''"></div>
+          <div class="modal-content">
+            <div class="box has-background-black has-text-white">
+              <h3 class="title is-4 has-text-white">Comments</h3>
+              <p>No comments yet...</p>
+              
+         
+            </div>
+          </div>
+          <button class="modal-close is-large" onclick="document.getElementById('modal-container').innerHTML=''"></button>
+        </div>
+      `;
   switch (action) {
     case 'like':
       target.classList.toggle('liked');
@@ -379,6 +592,7 @@ function handleCommentClick(videoId) {
     </div>
     </form>
   `;
+  trackEngagement(video, 'comment');
 }
 
 function handleShareClick(videoId) {

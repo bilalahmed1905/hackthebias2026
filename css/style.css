@@ -1,11 +1,18 @@
+
 /* Instagram styling */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { 
       height: 100%; 
       overflow: hidden; 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-      background: #fafafa;
+      background: linear-gradient(135deg, #4facfe 0%, #B8E0F0 100%);
+      /* #fafafa; */
     }
+
+    .action-icon.liked {
+      color: #ed4956;
+    }
+
     h1 {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
       z-index: 1000; color: #262626; font-weight: 600; font-size: 24px;
