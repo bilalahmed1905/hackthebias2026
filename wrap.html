@@ -73,23 +73,26 @@
 }
 
 function analyzeData() {
-  if (!engagementData) return;
+  if (!engagementData || !engagementData.engagement) return;
+  
+  // Use engagementData.engagement instead of engagementData directly
+  const engagement = engagementData.engagement;
   
   // Calculate total from the engagement scores
-  const totalEngagement = Object.values(engagementData).reduce((sum, val) => sum + val, 0);
-   totalInteractions = engagementData.interactionCount || 0;  // Get actual click count
+  const totalEngagement = Object.values(engagement).reduce((sum, val) => sum + val, 0);
+  totalInteractions = engagementData.interactionCount || 0;
   
   // Sort hashtags by engagement score and get top 3
-  const sortedHashtags = Object.entries(engagementData)
+  const sortedHashtags = Object.entries(engagement)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
   
   console.log('📊 Top 3 hashtags:', sortedHashtags);
   
-  const topHashtag = sortedHashtags[0][0];
+  const topHashtag = sortedHashtags[0]?.[0] || 'unknown';
   const dominantBias = determineBias(sortedHashtags, totalEngagement);
-  const diversityScore = calculateDiversity(engagementData);
-  const concentration = (sortedHashtags[0][1] / totalEngagement) * 100;
+  const diversityScore = calculateDiversity(engagement);
+  const concentration = sortedHashtags[0] ? (sortedHashtags[0][1] / totalEngagement) * 100 : 0;
   
   wrappedStats = {
     totalEngagement,
@@ -98,7 +101,7 @@ function analyzeData() {
     dominantBias,
     diversityScore,
     concentration,
-    videosWatched: feedHistory.length || 20  // Default to 20 if no history
+    videosWatched: feedHistory.length || 20
   };
   
   console.log('✅ Analysis complete:', wrappedStats);
@@ -129,12 +132,13 @@ function analyzeData() {
     }
 
     function calculateDiversity(engagement) {
-      const values = Object.values(engagement);
-      const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-      const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-      const stdDev = Math.sqrt(variance);
-      return Math.max(0, Math.min(100, 100 - (stdDev * 10)));
-    }
+  const values = Object.values(engagement);
+  if (values.length === 0) return 0;
+  const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+  return Math.max(0, Math.min(100, 100 - (stdDev * 10)));
+}
 
     function renderSlides() {
       const wrapper = document.getElementById('wrapper');

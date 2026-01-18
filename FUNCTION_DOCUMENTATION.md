@@ -21,7 +21,7 @@ This file contains all the core functions for the Instagram DoomScroll Simulator
 **Purpose**: Initializes the entire video feed on page load.
 
 **What it does**:
-1. Clears the feed container
+1. Clears the feed container fsetu
 2. Loads the first 5 **profiling videos** (diverse content from different categories)
 3. Logs profiling phase start
 4. Pre-computes the next 2 videos
