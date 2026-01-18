@@ -80,7 +80,8 @@
     }
 
     .action-icon:hover {
-      color: #fff;
+      /* color: #fff; */
+      opacity: 20%;
     }
 
     .action-icon.liked {

@@ -105,25 +105,32 @@
           <h2 class="title">${video.title}</h2>
         </div>
         <div class="video-actions">
-           <span class="action-icon like-button" data-action="like" data-video-id="${video.id}">
-           <i class="far fa-heart"></i>
-           </span>
            <span class="action-icon" data-video-id="${video.id}">
             <i class="far fa-comment" onClick="handleCommentClick(${video.id})"></i>
            </span>
-           <span class="action-icon" data-action="share" data-video-id="${video.id}">
-           <i class="far fa-paper-plane"></i>
+           <span class="action-icon" id="heart-icon" data-video-id="${video.id}">
+            <i class="far fa-heart" onClick="handleLikeClick(document.getElementById('heart-icon'))"></i>
            </span>
-
-          
+           <span class="action-icon" data-action="share" data-video-id="${video.id}">
+            <i class="far fa-paper-plane"></i>
+           </span>
 
         </div>
       `;
 
-
       postElement.appendChild(playerContainer);
       postElement.appendChild(overlayElement);
       feedContainer.appendChild(postElement);
+
+      const heartIcon = document.getElementById('heart-icon');
+      heartIcon.onclick = function() {
+        this.classList.add('.liked');
+        if (this.classList.contains('liked')) {
+          this.classList.replace('fa-regular', 'fa-solid');
+        } else {
+          this.classList.replace('fa-solid', 'fa-regular');
+        }
+      }   
 
       // Create YouTube player
       if (ytReady) {
@@ -154,11 +161,14 @@
         icon.addEventListener('click', handleFeedClick);
       });
 
+      
+
       // Update focus classes
       updateFocusClasses();
 
       return postElement;
     }
+    
 
     function setupObserver() {
       const observer = new IntersectionObserver((entries) => {
@@ -246,9 +256,7 @@
           heartIcon.classList.toggle('far');     // outline heart
           trackEngagement(videoData.find(v => v.id === videoId), 'like');
           break;
-          // target.classList.toggle('liked');
-          // trackEngagement(videoData.find(v => v.id === videoId), 'like');
-          // break;
+  
         case 'comment':
           handleCommentClick(videoId);
           break;
@@ -267,7 +275,17 @@
       });
     }
 
-    
+    function handleLikeClick(element) {
+  // 'element' refers to the icon that was clicked
+      element.classList.toggle('liked');
+      const heartIcon = element.querySelector('i');
+      
+      if (element.classList.contains('liked')) {
+        heartIcon.classList.replace('far', 'fas');
+      } else {
+        heartIcon.classList.replace('fas', 'far');
+      }
+    }
     function handleCommentClick(videoId) {
       const video = videoData.find(v => v.id === videoId);
       const modalContainer = document.getElementById('modal-container');
