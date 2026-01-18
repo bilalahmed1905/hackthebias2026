@@ -16,8 +16,10 @@
       overflow-y: scroll;
       scroll-snap-type: y mandatory;
       scroll-behavior: smooth;
-      background: #fafafa;
+      background: linear-gradient(135deg, #4facfe 0%, #B8E0F0 100%);
+      /* background: #fafafa; */
     }
+    .slide-1 { background: linear-gradient(135deg, #4facfe 0%, #B8E0F0 100%); }
 
     .video-post {
       height: 100vh;

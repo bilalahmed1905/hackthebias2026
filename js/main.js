@@ -58,7 +58,7 @@
     };
 
     let userProfile = {
-      engagement: {}
+      engagement: {"funny": 0, "pets": 0, "news": 0}
     };
 
     let ytReady = false;
@@ -101,7 +101,7 @@
       overlayElement.className = 'video-overlay';
       overlayElement.innerHTML = `
         <div class="video-info">
-          <h1 class="author">${video.author}</h1>
+          <h2 class="author">${video.author}</h2>
           <h2 class="title">${video.title}</h2>
         </div>
         <div class="video-actions">
@@ -285,6 +285,7 @@
       } else {
         heartIcon.classList.replace('fas', 'far');
       }
+      trackEngagement(videoData.find(v => v.id === videoId), 'like');
     }
     function handleCommentClick(videoId) {
       const video = videoData.find(v => v.id === videoId);

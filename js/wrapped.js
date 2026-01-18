@@ -5,14 +5,20 @@
 document.addEventListener('DOMContentLoaded', () => {
   // TODO:
   // 1. Retrieve the simulation data from localStorage.
-  const engagementData = JSON.parse(localStorage.getItem('userEngagement'));
-  const feedHistory = JSON.parse(localStorage.getItem('feedHistory'));
+  let engagementData = JSON.parse(localStorage.getItem('userEngagement'));
+  console.log('Engagement Data:', engagementData);
+  let feedHistory = JSON.parse(localStorage.getItem('feedHistory'));
 
   if (!engagementData || !feedHistory) {
     // Handle case where there is no data - maybe redirect back to index.html
     const wrappedContent = document.getElementById('wrapped-content');
     wrappedContent.innerHTML = '<p>No simulation data found. Please <a href="index.html">start the simulation</a> first.</p>';
-    return;
+    engagementData = { funny: 15, pets: 12, news: 3, dogs: 8 };
+    feedHistory = [
+      { id: 1, videoId: 'UhVc3B-OQIs', title: 'Ranking The Best Slow Motion Dogs 🐶', hashtags: ['funny', 'pets', 'dogs'] },
+      { id: 2, videoId: '0tng6DqwT3w', title: 'Ranking Dramatic Husky Moments 😂', hashtags: ['funny', 'pets', 'dogs'] }
+    ];
+    // return;
   }
 
   // 2. Analyze the data and populate the page.
