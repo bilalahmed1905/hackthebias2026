@@ -42,13 +42,6 @@ const videoData = [
         author: 'Klick Kitty',
         hashtags: ['funny', 'humor']      },
 {
-        id: 7,
-        videoId: 'x8_CbBupPIA',
-        title: 'Say This Out Loud If You\'re COOL! 😎🎤 (Super Hard Challenge?) #rhythmgame #brainteaser #funny',
-        author: 'On The One',
-        hashtags: ['funny', 'humor']
-      },
-{
         id: 8,
         videoId: '05DcLjNKH8w',
         title: 'Normal People vs US! 🤣😭 #shorts #funny',

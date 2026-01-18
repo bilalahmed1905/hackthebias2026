@@ -52,6 +52,11 @@ function initializeFeed() {
 }
 
 function createPost(video) {
+  // Add to feed SYNCHRONOUSLY first - this ensures feed order matches DOM order
+  simulationState.feed.push(video);
+  simulationState.viewedIds.add(video.id);
+  const myIndex = simulationState.feed.length - 1;
+  
   const feedContainer = document.getElementById('feed-container');
   const post = document.createElement('div');
   post.className = 'video-post';
@@ -98,16 +103,13 @@ function createPost(video) {
                 'onReady': (e) => {
           e.target.mute();
           simulationState.playerObjects[video.id] = e.target;
-          simulationState.feed.push(video);
-          simulationState.viewedIds.add(video.id);
           
           // Play if this video is at the current index (first visible)
-          const myIndex = simulationState.feed.length - 1;
           if (myIndex === simulationState.currentIndex) {
             e.target.playVideo();
-            console.log(`▶️ Auto-playing: ${video.title}`);
+            console.log(`▶️ Auto-playing: ${video.title} at index ${myIndex}`);
           }
-          console.log(`Player ready: ${video.title}`);
+          console.log(`Player ready: ${video.title} at index ${myIndex}`);
         },
         'onStateChange': (e) => {
           if (e.data === YT.PlayerState.ENDED) {
