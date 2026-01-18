@@ -40,48 +40,67 @@
         showNoData();
       }
     });
-
+    
     function loadData() {
-      try {
-        engagementData = JSON.parse(localStorage.getItem('userEngagement'));
-        feedHistory = JSON.parse(localStorage.getItem('feedHistory'));
-        
-        // Fallback to mock data for testing
-        if (!engagementData || !feedHistory) {
-          console.log('No data found, using mock data');
-          engagementData = { funny: 15, pets: 12, news: 3, dogs: 8 };
-          feedHistory = [
-            { id: 1, videoId: 'UhVc3B-OQIs', title: 'Ranking The Best Slow Motion Dogs 🐶', hashtags: ['funny', 'pets', 'dogs'] },
-            { id: 2, videoId: '0tng6DqwT3w', title: 'Ranking Dramatic Husky Moments 😂', hashtags: ['funny', 'pets', 'dogs'] }
-          ];
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
+  try {
+    // Load from localStorage - main.js saves as 'userProfile' with structure: { engagement: { tech: 15, funny: 8, ... } }
+    const userProfile = JSON.parse(localStorage.getItem('userProfile'));
+    const feed = JSON.parse(localStorage.getItem('feedHistory'));
+    
+    if (userProfile && userProfile.engagement) {
+      engagementData = userProfile.engagement;  // Extract the engagement object
+      console.log('✅ Loaded user profile:', engagementData);
+    } else {
+      console.log('⚠️ No user profile found in localStorage');
+      engagementData = null;
     }
+    
+    // feedHistory isn't saved by main.js yet, so we'll reconstruct or skip it
+    feedHistory = JSON.parse(localStorage.getItem('feedHistory')) || [];
+    
+    // If no feedHistory, create mock entries (since main.js doesn't save this)
+    if (feedHistory.length === 0 && engagementData) {
+      console.log('No feed history, using engagement data only');
+      feedHistory = []; // We'll work with just engagement data
+    }
+    
+  } catch (error) {
+    console.error('Error loading data:', error);
+    engagementData = null;
+    feedHistory = [];
+  }
+}
 
-    function analyzeData() {
-      const totalEngagement = Object.values(engagementData).reduce((sum, val) => sum + val, 0);
-      
-      const sortedHashtags = Object.entries(engagementData)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
-      
-      const topHashtag = sortedHashtags[0][0];
-      const dominantBias = determineBias(sortedHashtags, totalEngagement);
-      const diversityScore = calculateDiversity(engagementData);
-      const concentration = sortedHashtags[0][1] / totalEngagement * 100;
-      
-      wrappedStats = {
-        totalEngagement,
-        sortedHashtags,
-        topHashtag,
-        dominantBias,
-        diversityScore,
-        concentration,
-        videosWatched: feedHistory.length
-      };
-    }
+function analyzeData() {
+  if (!engagementData) return;
+  
+  // Calculate total from the engagement scores
+  const totalEngagement = Object.values(engagementData).reduce((sum, val) => sum + val, 0);
+  
+  // Sort hashtags by engagement score and get top 3
+  const sortedHashtags = Object.entries(engagementData)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  
+  console.log('📊 Top 3 hashtags:', sortedHashtags);
+  
+  const topHashtag = sortedHashtags[0][0];
+  const dominantBias = determineBias(sortedHashtags, totalEngagement);
+  const diversityScore = calculateDiversity(engagementData);
+  const concentration = (sortedHashtags[0][1] / totalEngagement) * 100;
+  
+  wrappedStats = {
+    totalEngagement,
+    sortedHashtags,
+    topHashtag,
+    dominantBias,
+    diversityScore,
+    concentration,
+    videosWatched: feedHistory.length || 20  // Default to 20 if no history
+  };
+  
+  console.log('✅ Analysis complete:', wrappedStats);
+}
 
     function determineBias(hashtags, total) {
       const topPercentage = hashtags[0][1] / total * 100;
@@ -203,36 +222,52 @@
         </div>
       `;
     }
-
     function createVideoJourneySlide() {
-      const snapshots = [
-        feedHistory[0],
-        feedHistory[Math.floor(feedHistory.length / 2)],
-        feedHistory[feedHistory.length - 1]
-      ].filter(v => v);
-      
-      const videosHTML = snapshots.map((video, index) => `
-        <div class="video-snapshot">
-          <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg" alt="${video.title}">
-          <div class="video-label">Video ${index === 0 ? '1' : index === 1 ? Math.floor(feedHistory.length / 2) + 1 : feedHistory.length}</div>
+  // Check if feedHistory has data
+  if (!feedHistory || feedHistory.length === 0) {
+    return `
+      <div class="slide slide-5">
+        <div class="slide-content">
+          <h2>Your Content Journey</h2>
+          <p class="subtitle">No video history available</p>
         </div>
-      `).join('');
-      
-      return `
-        <div class="slide slide-5">
-          <div class="slide-content">
-            <h2>Your Content Journey</h2>
-            <p class="subtitle">See how your feed evolved</p>
-            <div class="video-grid">
-              ${videosHTML}
-            </div>
-            <p style="font-size: 1.1rem; opacity: 0.8; margin-top: 20px;">
-              Notice how similar they became? That's the algorithm at work.
-            </p>
-          </div>
+      </div>
+    `;
+  }
+
+  // Get specific snapshots at positions: 1st, 6th, 11th, 18th
+  const positions = [0, 5, 10, 17]; // Array indices (0-based)
+  const snapshots = positions
+    .map(pos => feedHistory[pos])
+    .filter(v => v && v.videoId); // Make sure video exists and has videoId
+  
+  console.log('Journey snapshots:', snapshots); // Debug log
+  
+  const videosHTML = snapshots.map((video, index) => {
+    const videoNumber = positions[index] + 1; // Convert to 1-based number
+    return `
+      <div class="video-snapshot">
+        <img src="https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg" alt="${video.title || 'Video'}">
+        <div class="video-label">Video ${videoNumber}</div>
+      </div>
+    `;
+  }).join('');
+  
+  return `
+    <div class="slide slide-5">
+      <div class="slide-content">
+        <h2>Your Content Journey</h2>
+        <p class="subtitle">See how your feed evolved</p>
+        <div class="video-grid">
+          ${videosHTML}
         </div>
-      `;
-    }
+        <p style="font-size: 1.1rem; opacity: 0.8; margin-top: 20px;">
+          Notice how similar they became? That's the algorithm at work.
+        </p>
+      </div>
+    </div>
+  `;
+}
 
     function createFutureSlide() {
       const topTag = wrappedStats.topHashtag;

@@ -123,12 +123,6 @@ function createPost(video) {
           console.log(`Player ready: ${video.title} at index ${myIndex}`);
         },
         'onStateChange': (e) => {
-          if (e.data === YT.PlayerState.ENDED) {
-            e.target.playVideo();  // Force restart/loop
-            console.log(`Restarted: ${video.title} (no end screen)`);
-          }
-        },
-        'onStateChange': (e) => {
   // Track when video completes naturally (before loop restarts)
   if (e.data === YT.PlayerState.ENDED) {
     console.log(`✅ COMPLETED: ${video.title}`);
@@ -195,12 +189,8 @@ function createPost(video) {
         this.classList.replace('fa-solid', 'fa-regular');
       }
     }   
-
+  }
     // Create YouTube player
-    
-
-
-
 
 function computeNextVideos(num = 2) {
   simulationState.nextVideos = [];
@@ -218,8 +208,15 @@ function preloadNextVideos() {
       console.log('🎉 SIMULATION COMPLETE!');
       console.log('Final profile:', userProfile);
       localStorage.setItem('userProfile', JSON.stringify(userProfile));
+      localStorage.setItem('simulationState', JSON.stringify(simulationState));
       console.log('💾 Saved complete profile to localStorage');
+
+      setTimeout(() => {
+    console.log('🎬 Redirecting to Wrapped...');
+    window.location.href = 'wrap.html';
+  }, 1000);
     }
+
     return;
   }
   isLoading = true;
@@ -352,7 +349,13 @@ function setupSnapScroll() {
         console.log('🎉 REACHED END OF SIMULATION!');
         console.log('Final profile:', userProfile);
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        localStorage.setItem('feedHistory', JSON.stringify(simulationState.feed));
         console.log('💾 Saved complete profile to localStorage');
+
+    setTimeout(() => {
+      console.log('🎬 Redirecting to Wrapped...');
+      window.location.href = 'wrap.html';
+    }, 1000);  // 1 second delay so user sees they reached the end
     }
       
       // Delete the video DIRECTLY above when scrolling forward
@@ -374,70 +377,6 @@ function setupSnapScroll() {
     }, 100);
   }, { passive: true });
 }
-
-      return postElement;
-    }
-    
-
-// function handleFeedClick(e) {
-//   const target = e.target;
-//   if (!target.classList.contains('action-icon')) return;
-//   const action = target.dataset.action;
-//   const videoId = parseInt(target.dataset.videoId);
-//   const video = videoData.find(v => v.id === videoId);
-
-//           if (entry.isIntersecting && player) {
-//             player.playVideo();
-//           } else if (player) {
-//             player.pauseVideo();
-//           }
-//         });
-//       }, { threshold: 0.5 });
-
-//       simulationState.observer = observer;
-//       document.querySelectorAll('.video-post').forEach(post => observer.observe(post));
-//     }
-      
-
-    function setupSnapScroll() {
-      const feedContainer = document.getElementById('feed-container');
-      let scrollTimeout;
-
-      feedContainer.addEventListener('scroll', () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const scrollTop = feedContainer.scrollTop;
-          const newIndex = Math.round(scrollTop / window.innerHeight);
-          simulationState.currentIndex = Math.max(0, Math.min(newIndex, simulationState.feed.length - 1));
-          updateFocusClasses();
-        }, 100);
-      });
-
-      // Keyboard navigation
-      document.addEventListener('keydown', (e) => {
-        const feedContainer = document.getElementById('feed-container');
-        if (e.key === 'ArrowDown' || e.key === ' ') {
-          e.preventDefault();
-          if (simulationState.currentIndex < simulationState.feed.length - 1) {
-            simulationState.currentIndex++;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (simulationState.currentIndex > 0) {
-            simulationState.currentIndex--;
-            feedContainer.scrollTo({
-              top: simulationState.currentIndex * window.innerHeight,
-              behavior: 'smooth'
-            });
-          }
-        }
-      });
-    }
-
     function updateFocusClasses() {
       document.querySelectorAll('.video-post').forEach((post, index) => {
         post.classList.remove('item-focus', 'item-next', 'item-hide');
